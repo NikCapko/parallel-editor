@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 import os
 import sys
 import re
@@ -372,7 +372,7 @@ class SideBySideEditor:
     def open_original_with_program(self, program_cmd):
         """Открывает оригинальный .en.md файл выбранной программой"""
         if not self.orig_path:
-            messagebox.showerror("Ошибка", "Оригинальный файл не загружен")
+            show_dialog("Ошибка", "Оригинальный файл не загружен")
             return
 
         try:
@@ -383,18 +383,18 @@ class SideBySideEditor:
             elif self.trans_path.endswith(".en.md"):
                 en_path = self.trans_path
             else:
-                messagebox.showerror("Ошибка", "Английский файл не найден")
+                show_dialog("Ошибка", "Английский файл не найден")
                 return
 
             subprocess.Popen([program_cmd, en_path])
 
         except Exception as e:
-            messagebox.showerror("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
+            show_dialog("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
 
     def open_translate_with_program(self, program_cmd):
         """Открывает файл перевода .ru.md выбранной программой"""
         if not self.orig_path:
-            messagebox.showerror("Ошибка", "Файл перевода не загружен")
+            show_dialog("Ошибка", "Файл перевода не загружен")
             return
 
         try:
@@ -405,18 +405,18 @@ class SideBySideEditor:
             elif self.trans_path.endswith(".ru.md"):
                 en_path = self.trans_path
             else:
-                messagebox.showerror("Ошибка", "Файл перевода не найден")
+                show_dialog("Ошибка", "Файл перевода не найден")
                 return
 
             subprocess.Popen([program_cmd, en_path])
 
         except Exception as e:
-            messagebox.showerror("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
+            show_dialog("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
 
     def reload_md_files(self):
         """Перезагружает содержимое оригинального и переведённого файла с диска"""
         if not self.orig_path or not self.trans_path:
-            messagebox.showerror("Ошибка", "Файлы не загружены")
+            show_dialog("Ошибка", "Файлы не загружены")
             return
 
         try:
@@ -434,10 +434,10 @@ class SideBySideEditor:
             self.left_text.highlight_markdown()
             self.right_text.highlight_markdown()
 
-            messagebox.showinfo("Готово", "Файлы перезагружены с диска.")
+            show_dialog("Готово", "Файлы перезагружены с диска.")
 
         except Exception as e:
-            messagebox.showerror("Ошибка загрузки", str(e))
+            show_dialog("Ошибка загрузки", str(e))
 
     def highlight_current_line_left(self, event=None):
         self._highlight_line(self.left_text)
@@ -467,7 +467,7 @@ class SideBySideEditor:
         base_name, lang = os.path.splitext(base_name)
 
         if lang not in (".en", ".ru"):
-            messagebox.showerror("Ошибка", "Файл должен заканчиваться на .en.md или .ru.md")
+            show_dialog("Ошибка", "Файл должен заканчиваться на .en.md или .ru.md")
             return
 
         other_lang = ".ru" if lang == ".en" else ".en"
@@ -478,7 +478,7 @@ class SideBySideEditor:
         trans_path = base_name + trans_lang + ".md"
 
         if not os.path.exists(trans_path):
-            messagebox.showerror("Ошибка", f"Файл перевода не найден: {trans_path}")
+            show_dialog("Ошибка", f"Файл перевода не найден: {trans_path}")
             return
 
         if lang == ".en":
@@ -507,12 +507,12 @@ class SideBySideEditor:
             self.update_file_title()
 
         except Exception as e:
-            messagebox.showerror("Ошибка", str(e))
+            show_dialog("Ошибка", str(e))
 
     def edit_translate(self):
         """Открывает файл перевода .ru.md в mousepad"""
         if not self.orig_path:
-            messagebox.showerror("Ошибка", "Файлы не загружены")
+            show_dialog("Ошибка", "Файлы не загружены")
             return
 
         try:
@@ -523,14 +523,14 @@ class SideBySideEditor:
             elif self.trans_path.endswith(".ru.md"):
                 ru_path = self.trans_path
             else:
-                messagebox.showerror("Ошибка", "Русский файл не найден")
+                show_dialog("Ошибка", "Русский файл не найден")
                 return
 
             # Запускаем Ghostwriter с этим файлом
             subprocess.Popen(["mousepad", ru_path])
 
         except Exception as e:
-            messagebox.showerror("Ошибка предпросмотра", f"Не удалось открыть файл: {str(e)}")
+            show_dialog("Ошибка предпросмотра", f"Не удалось открыть файл: {str(e)}")
 
     def sync_cursor_left(self, event=None):
         if self.syncing:
@@ -616,7 +616,7 @@ class SideBySideEditor:
 
     def save_md_files(self):
         if not self.orig_path or not self.trans_path:
-            messagebox.showerror("Ошибка", "Файлы не загружены")
+            show_dialog("Ошибка", "Файлы не загружены")
             return
 
         try:
@@ -634,10 +634,10 @@ class SideBySideEditor:
             with open(self.trans_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(translated_text) + '\n')
 
-            messagebox.showinfo("Успех", "Файлы сохранены.")
+            show_dialog("Успех", "Файлы сохранены.")
 
         except Exception as e:
-            messagebox.showerror("Ошибка сохранения", str(e))
+            show_dialog("Ошибка сохранения", str(e))
 
     def adjust_scroll_to_position(self, text_widget, line_num, target_y):
         """Корректирует прокрутку чтобы строка была на заданной высоте"""
@@ -685,6 +685,31 @@ class SideBySideEditor:
         line_start = f"{index.split('.')[0]}.0"
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
+
+def show_dialog(title, message, timeout=2000):
+    dialog = tk.Toplevel()
+    dialog.geometry("300x100")
+    dialog.resizable(False, False)
+
+    label = tk.Label(dialog, text= title + "\n\n" + message)
+    label.pack(expand=True, padx=20, pady=20)
+
+    # Центрируем окно на экране
+    dialog.update_idletasks()
+    x = (dialog.winfo_screenwidth() - dialog.winfo_width()) // 2
+    y = (dialog.winfo_screenheight() - dialog.winfo_height()) // 2
+    dialog.geometry(f"+{x}+{y}")
+
+    # Закрыть окно через timeout миллисекунд
+    dialog.after(timeout, dialog.destroy)
+
+     # Сделать окно модальным
+    dialog.grab_set()
+    dialog.focus_set()
+
+    # Ждем, пока окно не будет закрыто (асинхронно)
+    dialog.wait_window()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
