@@ -686,7 +686,7 @@ class SideBySideEditor:
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
 
-def show_dialog(title, message, timeout=1000):
+def show_dialog(title, message, timeout=500):
     dialog = tk.Toplevel()
     dialog.geometry("300x100")
     dialog.resizable(False, False)
