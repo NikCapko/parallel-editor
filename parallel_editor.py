@@ -57,7 +57,8 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-1>", lambda e: self.format_line("h1"))
         self.bind("<Control-Key-2>", lambda e: self.format_line("h2"))
         self.bind("<Control-Key-3>", lambda e: self.format_line("h3"))
-        self.bind("<KeyRelease>", lambda e: self.highlight_markdown())
+
+        self.bind_all("<KeyRelease>", lambda e: self.highlight_markdown())
         self.bind("<<Paste>>", lambda e: self.highlight_markdown())
         self.bind("<<Cut>>", lambda e: self.highlight_markdown())
         self.bind("<ButtonRelease>", lambda e: self.highlight_markdown())
@@ -82,7 +83,8 @@ class MarkdownText(tk.Text):
         """Подсветка Markdown-синтаксиса (адаптированная версия)"""
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
-            self.tag_remove(tag, "1.0", tk.END)
+            if (tag != "current_line"):
+                self.tag_remove(tag, "1.0", tk.END)
         
         text = self.get("1.0", tk.END)
         lines = text.split('\n')
