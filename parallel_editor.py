@@ -161,6 +161,9 @@ class MarkdownText(tk.Text):
         text = self.get(line_start, line_end)
 
         if style == "bold":
+            # Если уже есть *, убираем
+            if text.startswith("*") and text.endswith("*"):
+                text = text[1:-1]
             # Если уже есть **, убираем
             if text.startswith("**") and text.endswith("**"):
                 text = text[2:-2]
