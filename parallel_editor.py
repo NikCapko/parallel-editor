@@ -353,13 +353,13 @@ class SideBySideEditor:
         self.right_line_numbers.redraw()
         self.right_scroll.set(*args)
 
-    def on_text_scroll_left(self, first, last):
+    def on_text_scroll_left(self, *args):
         self.left_line_numbers.redraw()
-        self.left_scroll.set(first, last)  # обновляем положение ползунка
+        self.left_scroll.set(args[0], args[1])  # обновляем положение ползунка
 
-    def on_text_scroll_right(self, first, last):
+    def on_text_scroll_right(self, *args):
         self.right_line_numbers.redraw()
-        self.right_scroll.set(first, last)
+        self.right_scroll.set(args[0], args[1])
 
     def update_file_title(self):
         """Обновляет заголовок с названием файла"""
