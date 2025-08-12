@@ -401,8 +401,8 @@ class SideBySideEditor:
         container.grid_columnconfigure(2, weight=1)
 
         # Подсветка строки с курсором
-        self.left_text.tag_configure("current_line", background="#e6f2ff")
-        self.right_text.tag_configure("current_line", background="#e6f2ff")
+        self.left_text.tag_configure("current_line", background="#e7ff00", selectbackground="#77b8ff")
+        self.right_text.tag_configure("current_line", background="#e7ff00", selectbackground="#77b8ff")
 
         self.left_text.bind("<ButtonRelease-1>", self.highlight_current_line_left)
         self.right_text.bind("<ButtonRelease-1>", self.highlight_current_line_right)
