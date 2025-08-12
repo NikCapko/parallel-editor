@@ -61,7 +61,6 @@ class MarkdownText(tk.Text):
         self.bind_all("<KeyRelease>", lambda e: self.highlight_markdown())
         self.bind("<<Paste>>", lambda e: self.highlight_markdown())
         self.bind("<<Cut>>", lambda e: self.highlight_markdown())
-        self.bind("<ButtonRelease>", lambda e: self.highlight_markdown())
 
     def configure_tags(self):
         """Настройка стилей для Markdown-элементов"""
