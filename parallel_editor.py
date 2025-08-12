@@ -47,7 +47,7 @@ class TOCList(tk.Listbox):
     def __init__(self, parent, text_widget=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.text_widget = text_widget
-        self.configure(width=20, activestyle="none")
+        self.configure(width=25, activestyle="none")
         self.bind("<ButtonRelease-1>", self.on_select)
 
     def set_text_widget(self, widget):
@@ -426,6 +426,7 @@ class SideBySideEditor:
 
         root.bind("<Control-s>", lambda event: self.save_md_files())
         root.bind("<Control-o>", lambda event: self.load_md_pair_dialog())
+        root.bind("<Control-r>", lambda event: self.reload_md_files())
 
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
