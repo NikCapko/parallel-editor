@@ -140,6 +140,9 @@ class SideBySideEditor:
         self.left_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.left_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Панель перехода к строке слева
+        self.left_jump_entry = self.create_jump_panel(left_editor_frame, self.left_text)
+
         # Правый редактор
         right_editor_frame = tk.Frame(container)
         right_editor_frame.grid(row=0, column=2, sticky="nsew")
@@ -171,8 +174,11 @@ class SideBySideEditor:
         self.right_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.right_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Панель перехода к строке справа
+        self.right_jump_entry = self.create_jump_panel(right_editor_frame, self.right_text)
+
         # Скрыть TOC по умолчанию
-        self.init_toc_state()
+        # self.init_toc_state()
 
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -204,6 +210,27 @@ class SideBySideEditor:
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def create_jump_panel(self, parent, text_widget):
+        frame = tk.Frame(parent)
+        frame.pack(side=tk.BOTTOM, fill=tk.X)
+        entry = tk.Entry(frame, width=6)
+        entry.pack(side=tk.LEFT, padx=2, pady=2)
+
+        def jump(event=None):
+            try:
+                line_num = int(entry.get())
+                text_widget.mark_set("insert", f"{line_num}.0")
+                text_widget.see(f"{line_num}.0")
+                text_widget.focus_set()
+            except ValueError:
+                pass  # игнорируем некорректный ввод
+
+        btn = tk.Button(frame, text="⏎", command=jump, width=3)
+        btn.pack(side=tk.LEFT, padx=2)
+        entry.bind("<Return>", jump)
+
+        return entry
 
     def init_toc_state(self):
         # Скрываем TOC по умолчанию
