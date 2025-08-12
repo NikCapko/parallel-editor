@@ -83,6 +83,39 @@ class TOCList(tk.Listbox):
                     self.text_widget.see(f"{i}.0")
                     break
 
+class ToolTip:
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tooltip = None
+        self.widget.bind("<Enter>", self.show_tooltip)
+        self.widget.bind("<Leave>", self.hide_tooltip)
+
+    def show_tooltip(self, event=None):
+        x, y, _, _ = self.widget.bbox("insert")
+        x += self.widget.winfo_rootx() + 25
+        y += self.widget.winfo_rooty() + 25
+
+        self.tooltip = tk.Toplevel(self.widget)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.wm_geometry(f"+{x}+{y}")
+
+        label = tk.Label(
+            self.tooltip,
+            text=self.text,
+            bg="lightyellow",
+            relief="solid",
+            borderwidth=1,
+            padx=5,
+            pady=2
+        )
+        label.pack()
+
+    def hide_tooltip(self, event=None):
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = None
+
 class MarkdownText(tk.Text):
     """Кастомный Text виджет с подсветкой Markdown"""
     def __init__(self, *args, **kwargs):
@@ -266,85 +299,59 @@ class SideBySideEditor:
         self.buttons_frame.pack(side=tk.LEFT, anchor="nw", pady=(5, 0))
 
         # Кнопки с иконками
-        self.load_button = tk.Button(self.buttons_frame, text="📁 Open", 
+        self.load_button = tk.Button(self.buttons_frame, text="📁", 
                                    command=self.load_md_pair_dialog,
                                    font=("Noto Color Emoji", 12, "bold"))
         self.load_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.load_button, "Open File")
 
-        self.save_button = tk.Button(self.buttons_frame, text="💾 Save", 
-                                   command=self.save_md_files,
-                                   font=("Noto Color Emoji", 12, "bold"))
+        self.save_button = tk.Button(self.buttons_frame, text="💾",  command=self.save_md_files,font=("Noto Color Emoji", 12, "bold"))
         self.save_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.save_button, "Save Files")
 
-        # Кнопка с выпадающим меню для открытия EN файла
-        self.open_original_menu_button = tk.Menubutton(self.buttons_frame, text="📝 EN", relief=tk.RAISED, font=("Noto Color Emoji", 12))
-        self.open_original_menu = tk.Menu(self.open_original_menu_button, tearoff=0, font=("Noto Color Emoji", 12, "bold"))
+        self.edit_original_button = tk.Button(self.buttons_frame, text="📝󾓦", command=lambda: self.open_original_with_program("mousepad"),font=("Noto Color Emoji", 12, "bold"))
+        self.edit_original_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.edit_original_button, "Edit En File")
 
-        # Список программ для выбора
-        self.programs = {
-            "📝 Mousepad": "mousepad",
-            "🌐 Yandex Browser": "yandex-browser-stable"
-        }
+        self.translate_original_button = tk.Button(self.buttons_frame, text="🌐󾓦", command=lambda: self.open_original_with_program("yandex-browser-stable"),font=("Noto Color Emoji", 12, "bold"))
+        self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.translate_original_button, "Translate En File")
 
-        for label, command in self.programs.items():
-            self.open_original_menu.add_command(label=label, command=lambda cmd=command: self.open_original_with_program(cmd))
+        self.edit_translate_button = tk.Button(self.buttons_frame, text="📝󾓬", command=lambda: self.open_translate_with_program("mousepad"),font=("Noto Color Emoji", 12, "bold"))
+        self.edit_translate_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.edit_translate_button, "Open Ru File")
 
-        self.open_original_menu_button.config(menu=self.open_original_menu)
-        self.open_original_menu_button.pack(side=tk.LEFT, padx=(0, 5))
-
-        # Кнопка с выпадающим меню для открытия RU файла
-        self.open_translate_menu_button = tk.Menubutton(self.buttons_frame, text="📝 RU", relief=tk.RAISED, font=("Noto Color Emoji", 12))
-        self.open_translate_menu = tk.Menu(self.open_translate_menu_button, tearoff=0, font=("Noto Color Emoji", 12, "bold"))
-
-        # Список программ для выбора
-        self.programs = {
-            "📝 Mousepad": "mousepad"
-        }
-
-        for label, command in self.programs.items():
-            self.open_translate_menu.add_command(label=label, command=lambda cmd=command: self.open_translate_with_program(cmd))
-
-        self.open_translate_menu_button.config(menu=self.open_translate_menu)
-        self.open_translate_menu_button.pack(side=tk.LEFT, padx=(0, 5))
-
-        self.reload_button = tk.Button(self.buttons_frame, text="🔄 Reload", 
-                               command=self.reload_md_files,
-                               font=("Noto Color Emoji", 12, "bold"))
+        self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files, font=("Noto Color Emoji", 12, "bold"))
         self.reload_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.reload_button, "Reload Files")
 
-        self.exit_button = tk.Button(self.buttons_frame, text="❌ Exit", 
-                                   command=root.quit,
-                                   font=("Noto Color Emoji", 12, "bold"))
+        self.exit_button = tk.Button(self.buttons_frame, text="❌", command=root.quit, font=("Noto Color Emoji", 12, "bold"))
         self.exit_button.pack(side=tk.LEFT)
+        ToolTip(self.exit_button, "Exit")
 
         # Панель форматирования справа
         self.format_frame = tk.Frame(self.top_frame)
         self.format_frame.pack(side=tk.RIGHT, anchor="ne", pady=(5, 0))
 
-        self.bold_button = tk.Button(self.format_frame, text="**B**",
-                                     command=lambda: self.apply_format("bold"),
-                                     font=("Arial", 12, "bold"))
+        self.bold_button = tk.Button(self.format_frame, text="**B**", command=lambda: self.apply_format("bold"), font=("Arial", 8, "bold"))
         self.bold_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.bold_button, "bold format")
 
-        self.italic_button = tk.Button(self.format_frame, text="*I*",
-                                       command=lambda: self.apply_format("italic"),
-                                       font=("Arial", 12, "italic"))
+        self.italic_button = tk.Button(self.format_frame, text="*I*", command=lambda: self.apply_format("italic"), font=("Arial", 8, "italic"))
         self.italic_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.italic_button, "italic format")
 
-        self.h1_button = tk.Button(self.format_frame, text="H1",
-                                   command=lambda: self.apply_format("h1"),
-                                   font=("Arial", 12))
+        self.h1_button = tk.Button(self.format_frame, text="H1", command=lambda: self.apply_format("h1"), font=("Arial", 8))
         self.h1_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.h1_button, "h1 title format")
 
-        self.h2_button = tk.Button(self.format_frame, text="H2",
-                                   command=lambda: self.apply_format("h2"),
-                                   font=("Arial", 12))
+        self.h2_button = tk.Button(self.format_frame, text="H2", command=lambda: self.apply_format("h2"), font=("Arial", 8))
         self.h2_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.h2_button, "h2 title format")
 
-        self.h3_button = tk.Button(self.format_frame, text="H3",
-                                   command=lambda: self.apply_format("h3"),
-                                   font=("Arial", 12))
+        self.h3_button = tk.Button(self.format_frame, text="H3", command=lambda: self.apply_format("h3"), font=("Arial", 8))
         self.h3_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.h3_button, "h3 title format")
 
         # Основной контейнер
         container = tk.Frame(root)
