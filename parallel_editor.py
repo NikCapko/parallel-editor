@@ -797,14 +797,6 @@ def show_dialog(title, message, timeout=500):
     # Закрыть окно через timeout миллисекунд
     dialog.after(timeout, dialog.destroy)
 
-     # Сделать окно модальным
-    dialog.grab_set()
-    dialog.focus_set()
-
-    # Ждем, пока окно не будет закрыто (асинхронно)
-    dialog.wait_window()
-
-
 if __name__ == "__main__":
     root = tk.Tk()
     app = SideBySideEditor(root)
