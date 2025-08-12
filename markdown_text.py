@@ -27,6 +27,8 @@ class MarkdownText(tk.Text):
         self.tag_config("h1", font=("Arial", 18, "bold"), foreground="#2b6cb0")
         self.tag_config("h2", font=("Arial", 16, "bold"), foreground="#2c5282")
         self.tag_config("h3", font=("Arial", 14, "bold"), foreground="#3182ce")
+        self.tag_config("h4", font=("Arial", 12, "bold"), foreground="#3182ce")
+        self.tag_config("h5", font=("Arial", 11, "bold"), foreground="#3182ce")
         # Форматирование текста
         self.tag_config("bold", font=("Arial", 12, "bold"))
         self.tag_config("italic", font=("Arial", 12, "italic"))
@@ -59,6 +61,10 @@ class MarkdownText(tk.Text):
                 self.tag_add("h2", line_start, line_end)
             elif re.match(r"^###\s", line):
                 self.tag_add("h3", line_start, line_end)
+            elif re.match(r"^####\s", line):
+                self.tag_add("h4", line_start, line_end)
+            elif re.match(r"^#####\s", line):
+                self.tag_add("h5", line_start, line_end)
 
             # Списки
             if re.match(r"^[\*\-\+]\s", line):
@@ -160,6 +166,18 @@ class MarkdownText(tk.Text):
                 text = text[4:]
             else:
                 text = f"### {text}"
+
+        elif style == "h4":
+            if text.startswith("#### "):
+                text = text[5:]
+            else:
+                text = f"#### {text}"
+
+        elif style == "h5":
+            if text.startswith("##### "):
+                text = text[6:]
+            else:
+                text = f"##### {text}"
 
         self.delete(line_start, line_end)
         self.insert(line_start, text)

@@ -105,6 +105,16 @@ class SideBySideEditor:
         self.h3_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h3_button, "h3 title format")
 
+        self.h4_button = tk.Button(self.format_frame, text="H4", command=lambda: self.apply_format("h4"),
+                                   font=("Arial", 8))
+        self.h4_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.h4_button, "h4 title format")
+
+        self.h5_button = tk.Button(self.format_frame, text="H5", command=lambda: self.apply_format("h5"),
+                                   font=("Arial", 8))
+        self.h5_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.h5_button, "h5 title format")
+
         # Основной контейнер
         container = tk.Frame(root)
         container.pack(fill=tk.BOTH, expand=True)
