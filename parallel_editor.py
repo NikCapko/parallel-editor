@@ -43,6 +43,46 @@ class LineNumbers(tk.Canvas):
             self.create_text(30, y, anchor="ne", text=line_num, fill="#666666")
             i = self.text_widget.index(f"{i}+1line")
 
+class TOCList(tk.Listbox):
+    def __init__(self, parent, text_widget=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.text_widget = text_widget
+        self.configure(width=20, activestyle="none")
+        self.bind("<ButtonRelease-1>", self.on_select)
+
+    def set_text_widget(self, widget):
+        self.text_widget = widget
+
+    def update_toc(self):
+        self.delete(0, tk.END)
+        if not self.text_widget:
+            return
+        lines = self.text_widget.get("1.0", tk.END).split("\n")
+        for i, line in enumerate(lines, 1):
+            if line.startswith("# "):
+                self.insert(tk.END, f"{line[2:]}")
+            elif line.startswith("## "):
+                self.insert(tk.END, f"  {line[3:]}")
+            elif line.startswith("### "):
+                self.insert(tk.END, f"    {line[4:]}")
+
+    def on_select(self, event=None):
+        if not self.text_widget:
+            return
+        selection = self.curselection()
+        if not selection:
+            return
+        idx = selection[0]
+        lines = self.text_widget.get("1.0", tk.END).split("\n")
+        header_count = -1
+        for i, line in enumerate(lines, 1):
+            if line.startswith("#"):
+                header_count += 1
+                if header_count == idx:
+                    self.text_widget.mark_set("insert", f"{i}.0")
+                    self.text_widget.see(f"{i}.0")
+                    break
+
 class MarkdownText(tk.Text):
     """Кастомный Text виджет с подсветкой Markdown"""
     def __init__(self, *args, **kwargs):
@@ -111,6 +151,11 @@ class MarkdownText(tk.Text):
         self.highlight_pattern(r"\*(.+?)\*", "italic", exclude_tags=["bold", "bold_italic"])
         self.highlight_pattern(r"`(.+?)`", "code")
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link")
+
+        if hasattr(self.master.master, "left_toc") and self.master.master.left_toc.text_widget == self:
+            self.master.master.left_toc.update_toc()
+        if hasattr(self.master.master, "right_toc") and self.master.master.right_toc.text_widget == self:
+            self.master.master.right_toc.update_toc()
         
     def highlight_pattern(self, pattern, tag, start="1.0", end="end", exclude_tags=None):
         """Подсветка без перекрытия с другими тегами"""
@@ -311,11 +356,16 @@ class SideBySideEditor:
         left_frame = tk.Frame(container)
         right_frame = tk.Frame(container)
 
+        # Левый редактор с оглавлением и номерами строк
+        self.left_toc = TOCList(left_frame, None)
+        self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
+
         # Левый редактор с номерами строк
         self.left_line_numbers = LineNumbers(left_frame, width=40)
         self.left_line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
         self.left_text = MarkdownText(left_frame, wrap="word")
+        self.left_toc.text_widget = self.left_text  # привязка
         self.left_line_numbers.attach(self.left_text)
 
         self.left_scroll = tk.Scrollbar(left_frame, command=self.on_scroll_left)
@@ -334,6 +384,10 @@ class SideBySideEditor:
         self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
         self.right_text.configure(yscrollcommand=self.on_text_scroll_right)
         
+        self.right_toc = TOCList(right_frame, None)
+        self.right_toc.pack(side=tk.RIGHT, fill=tk.Y)
+        self.right_toc.text_widget = self.right_text
+
         self.right_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.right_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         right_frame.grid(row=0, column=2, sticky="nsew")
@@ -469,6 +523,9 @@ class SideBySideEditor:
             self.left_text.highlight_markdown()
             self.right_text.highlight_markdown()
 
+            self.left_toc.update_toc()
+            self.right_toc.update_toc()
+
             show_dialog("Готово", "Файлы перезагружены с диска.")
 
         except Exception as e:
@@ -537,6 +594,9 @@ class SideBySideEditor:
 
             self.left_text.highlight_markdown()
             self.right_text.highlight_markdown()
+
+            self.left_toc.update_toc()
+            self.right_toc.update_toc()
             
             # Обновляем заголовок после загрузки файлов
             self.update_file_title()
