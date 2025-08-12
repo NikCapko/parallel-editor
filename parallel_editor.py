@@ -109,29 +109,53 @@ class SideBySideEditor:
         container.pack(fill=tk.BOTH, expand=True)
 
         # Создаем фреймы для каждого редактора с номерами строк
-        left_frame = tk.Frame(container)
-        right_frame = tk.Frame(container)
-
         # Левый редактор с оглавлением и номерами строк
+        left_editor_frame = tk.Frame(container)
+        left_editor_frame.grid(row=0, column=0, sticky="nsew")
+
+        # Панель с кнопкой для левого TOC
+        left_top_panel = tk.Frame(left_editor_frame)
+        left_top_panel.pack(side=tk.TOP, fill=tk.X)
+        self.toggle_left_toc_button = tk.Button(left_top_panel, text="👈",
+                                                command=self.toggle_left_toc,
+                                                font=("Noto Color Emoji", 10))
+        self.toggle_left_toc_button.pack(side=tk.LEFT, anchor="w", padx=2, pady=2)
+
+        # Основная часть левого редактора
+        left_frame = tk.Frame(left_editor_frame)
+        left_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
         self.left_toc = TOCList(left_frame, None)
         self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
 
-        # Левый редактор с номерами строк
         self.left_line_numbers = LineNumbers(left_frame, width=40)
         self.left_line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
         self.left_text = MarkdownText(left_frame, wrap="word")
-        self.left_toc.text_widget = self.left_text  # привязка
+        self.left_toc.text_widget = self.left_text
         self.left_line_numbers.attach(self.left_text)
-
         self.left_scroll = tk.Scrollbar(left_frame, command=self.on_scroll_left)
         self.left_text.configure(yscrollcommand=self.on_text_scroll_left)
 
         self.left_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.left_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        left_frame.grid(row=0, column=0, sticky="nsew")
 
-        # Правый редактор с номерами строк
+        # Правый редактор
+        right_editor_frame = tk.Frame(container)
+        right_editor_frame.grid(row=0, column=2, sticky="nsew")
+
+        # Панель с кнопкой для правого TOC
+        right_top_panel = tk.Frame(right_editor_frame)
+        right_top_panel.pack(side=tk.TOP, fill=tk.X)
+        self.toggle_right_toc_button = tk.Button(right_top_panel, text="👉",
+                                                 command=self.toggle_right_toc,
+                                                 font=("Noto Color Emoji", 10))
+        self.toggle_right_toc_button.pack(side=tk.RIGHT, anchor="e", padx=2, pady=2)
+
+        # Основная часть правого редактора
+        right_frame = tk.Frame(right_editor_frame)
+        right_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
         self.right_line_numbers = LineNumbers(right_frame, width=40)
         self.right_line_numbers.pack(side=tk.LEFT, fill=tk.Y)
 
@@ -146,11 +170,9 @@ class SideBySideEditor:
 
         self.right_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.right_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        right_frame.grid(row=0, column=2, sticky="nsew")
 
-        # Разделитель между редакторами
-        separator = tk.Frame(container, width=2, bd=1, relief=tk.SUNKEN)
-        separator.grid(row=0, column=1, sticky="ns")
+        # Скрыть TOC по умолчанию
+        self.init_toc_state()
 
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -182,6 +204,32 @@ class SideBySideEditor:
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def init_toc_state(self):
+        # Скрываем TOC по умолчанию
+        self.left_toc.pack_forget()
+        self.right_toc.pack_forget()
+        # Иконки в начальном состоянии
+        self.toggle_left_toc_button.config(text="📑")
+        self.toggle_right_toc_button.config(text="📑")
+
+    def toggle_left_toc(self):
+        if self.left_toc.winfo_ismapped():
+            self.left_toc.pack_forget()
+            self.toggle_left_toc_button.config(text="📑")  # скрыт
+        else:
+            self.left_toc.pack(side=tk.LEFT, fill=tk.Y, before=self.left_line_numbers)
+            self.left_toc.update_toc()
+            self.toggle_left_toc_button.config(text="👈")  # показан
+
+    def toggle_right_toc(self):
+        if self.right_toc.winfo_ismapped():
+            self.right_toc.pack_forget()
+            self.toggle_right_toc_button.config(text="📑")  # скрыт
+        else:
+            self.right_toc.pack(side=tk.RIGHT, fill=tk.Y, before=self.right_scroll)
+            self.right_toc.update_toc()
+            self.toggle_right_toc_button.config(text="👉")  # показан
 
     def apply_format(self, style):
         widget = self.root.focus_get()
