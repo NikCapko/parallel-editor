@@ -144,7 +144,7 @@ class SideBySideEditor:
         left_num_frame = tk.Frame(left_frame)
         left_num_frame.pack(side=tk.LEFT, fill=tk.Y)
 
-        self.left_line_numbers = LineNumbers(left_num_frame, width=40)
+        self.left_line_numbers = LineNumbers(left_num_frame, width=50)
         self.left_line_numbers.pack(side=tk.TOP, fill=tk.Y, expand=True)
 
         self.left_jump_entry = tk.Entry(left_num_frame, width=5)

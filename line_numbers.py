@@ -4,7 +4,7 @@ class LineNumbers(tk.Canvas):
     def __init__(self, parent, *args, **kwargs):
         tk.Canvas.__init__(self, parent, *args, **kwargs)
         self.text_widget = None
-        self.configure(width=40, highlightthickness=0)
+        self.configure(width=50, highlightthickness=0)
 
     def attach(self, text_widget):
         self.text_widget = text_widget
@@ -29,5 +29,5 @@ class LineNumbers(tk.Canvas):
             if dline is None: break
             y = dline[1]
             line_num = str(i).split(".")[0]
-            self.create_text(30, y, anchor="ne", text=line_num, fill="#666666")
+            self.create_text(45, y, anchor="ne", text=line_num, fill="#666666")
             i = self.text_widget.index(f"{i}+1line")
