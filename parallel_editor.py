@@ -1,28 +1,28 @@
+import os
+import re
+import subprocess
+import sys
 import tkinter as tk
 from tkinter import filedialog
-import os
-import sys
-import re
-import webbrowser
-import tempfile
-import subprocess
+
 
 class TextFieldType():
     LEFT = 1
     RIGHT = 2
+
 
 class LineNumbers(tk.Canvas):
     def __init__(self, parent, *args, **kwargs):
         tk.Canvas.__init__(self, parent, *args, **kwargs)
         self.text_widget = None
         self.configure(width=40, highlightthickness=0)
-        
+
     def attach(self, text_widget):
         self.text_widget = text_widget
         self.text_widget.bind("<Configure>", self.on_configure)
         self.text_widget.bind("<KeyRelease>", self.on_key_release)
         self.text_widget.bind("<ButtonRelease-1>", self.on_key_release)
-        
+
     def on_configure(self, event=None):
         self.redraw()
 
@@ -32,7 +32,7 @@ class LineNumbers(tk.Canvas):
     def redraw(self):
         if not self.text_widget:
             return
-            
+
         self.delete("all")
         i = self.text_widget.index("@0,0")
         while True:
@@ -42,6 +42,7 @@ class LineNumbers(tk.Canvas):
             line_num = str(i).split(".")[0]
             self.create_text(30, y, anchor="ne", text=line_num, fill="#666666")
             i = self.text_widget.index(f"{i}+1line")
+
 
 class TOCList(tk.Listbox):
     def __init__(self, parent, text_widget=None, *args, **kwargs):
@@ -83,6 +84,7 @@ class TOCList(tk.Listbox):
                     self.text_widget.see(f"{i}.0")
                     break
 
+
 class ToolTip:
     def __init__(self, widget, text):
         self.widget = widget
@@ -116,8 +118,10 @@ class ToolTip:
             self.tooltip.destroy()
             self.tooltip = None
 
+
 class MarkdownText(tk.Text):
     """Кастомный Text виджет с подсветкой Markdown"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.configure(undo=True, maxundo=20)
@@ -150,22 +154,22 @@ class MarkdownText(tk.Text):
         self.tag_config("link", foreground="#4299e1", underline=1)
         # Списки
         self.tag_config("list", lmargin2=20, spacing1=5)
-        
+
     def highlight_markdown(self, event=None):
         """Подсветка Markdown-синтаксиса (адаптированная версия)"""
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
             if (tag != "current_line"):
                 self.tag_remove(tag, "1.0", tk.END)
-        
+
         text = self.get("1.0", tk.END)
         lines = text.split('\n')
-        
+
         # Обрабатываем построчно для многострочных паттернов
         for i, line in enumerate(lines, 1):
             line_start = f"{i}.0"
             line_end = f"{i}.end"
-            
+
             # Заголовки
             if re.match(r"^#\s", line):
                 self.tag_add("h1", line_start, line_end)
@@ -173,11 +177,11 @@ class MarkdownText(tk.Text):
                 self.tag_add("h2", line_start, line_end)
             elif re.match(r"^###\s", line):
                 self.tag_add("h3", line_start, line_end)
-            
+
             # Списки
             if re.match(r"^[\*\-\+]\s", line):
                 self.tag_add("list", line_start, line_end)
-        
+
         # Обрабатываем встроенные элементы (не зависящие от строк)
         self.highlight_pattern(r"\*\*\*(.+?)\*\*\*", "bold_italic")
         self.highlight_pattern(r"\*\*(.+?)\*\*", "bold", exclude_tags=["bold_italic"])
@@ -189,7 +193,7 @@ class MarkdownText(tk.Text):
             self.master.master.left_toc.update_toc()
         if hasattr(self.master.master, "right_toc") and self.master.master.right_toc.text_widget == self:
             self.master.master.right_toc.update_toc()
-        
+
     def highlight_pattern(self, pattern, tag, start="1.0", end="end", exclude_tags=None):
         """Подсветка без перекрытия с другими тегами"""
         if exclude_tags is None:
@@ -200,11 +204,16 @@ class MarkdownText(tk.Text):
         self.mark_set("matchStart", start)
         self.mark_set("matchEnd", start)
         self.mark_set("searchLimit", end)
-        
+
         count = tk.IntVar()
         while True:
-            index = self.search(pattern, "matchEnd", "searchLimit",
-                            count=count, regexp=True)
+            index = self.search(
+                pattern,
+                index="matchEnd",
+                stopindex="searchLimit",
+                count=count,
+                regexp=True,
+            )
             if index == "":
                 break
             if count.get() == 0:
@@ -219,7 +228,7 @@ class MarkdownText(tk.Text):
                 if self.tag_ranges(t):  # Есть ли теги вообще
                     ranges = self.tag_ranges(t)
                     for i in range(0, len(ranges), 2):
-                        if self.compare(match_start, ">=", ranges[i]) and self.compare(match_start, "<", ranges[i+1]):
+                        if self.compare(match_start, ">=", ranges[i]) and self.compare(match_start, "<", ranges[i + 1]):
                             overlap = True
                             break
                 if overlap:
@@ -244,10 +253,7 @@ class MarkdownText(tk.Text):
             if text.startswith("**") and text.endswith("**"):
                 text = text[2:-2]
             else:
-                # Если уже есть *, убираем
-                if text.startswith("*") and text.endswith("*"):
-                    text = text[1:-1]
-                text = f"**{text.strip()}**"
+                text = f"**{text.strip().strip('*')}**"
 
         elif style == "italic":
             if text.startswith("*") and text.endswith("*"):
@@ -277,6 +283,7 @@ class MarkdownText(tk.Text):
         self.insert(line_start, text)
         self.highlight_markdown()
 
+
 class SideBySideEditor:
     def __init__(self, root):
         self.root = root
@@ -299,33 +306,42 @@ class SideBySideEditor:
         self.buttons_frame.pack(side=tk.LEFT, anchor="nw", pady=(5, 0))
 
         # Кнопки с иконками
-        self.load_button = tk.Button(self.buttons_frame, text="📁", 
-                                   command=self.load_md_pair_dialog,
-                                   font=("Noto Color Emoji", 12, "bold"))
+        self.load_button = tk.Button(self.buttons_frame, text="📁",
+                                     command=self.load_md_pair_dialog,
+                                     font=("Noto Color Emoji", 12, "bold"))
         self.load_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.load_button, "Open File")
 
-        self.save_button = tk.Button(self.buttons_frame, text="💾",  command=self.save_md_files,font=("Noto Color Emoji", 12, "bold"))
+        self.save_button = tk.Button(self.buttons_frame, text="💾", command=self.save_md_files,
+                                     font=("Noto Color Emoji", 12, "bold"))
         self.save_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.save_button, "Save Files")
 
-        self.edit_original_button = tk.Button(self.buttons_frame, text="📝󾓦", command=lambda: self.open_original_with_program("mousepad"),font=("Noto Color Emoji", 12, "bold"))
+        self.edit_original_button = tk.Button(self.buttons_frame, text="📝󾓦",
+                                              command=lambda: self.open_original_with_program("mousepad"),
+                                              font=("Noto Color Emoji", 12, "bold"))
         self.edit_original_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.edit_original_button, "Edit En File")
 
-        self.translate_original_button = tk.Button(self.buttons_frame, text="🌐󾓦", command=lambda: self.open_original_with_program("yandex-browser-stable"),font=("Noto Color Emoji", 12, "bold"))
+        self.translate_original_button = tk.Button(self.buttons_frame, text="🌐󾓦",
+                                                   command=lambda: self.open_original_with_program(
+                                                       "yandex-browser-stable"), font=("Noto Color Emoji", 12, "bold"))
         self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.translate_original_button, "Translate En File")
 
-        self.edit_translate_button = tk.Button(self.buttons_frame, text="📝󾓬", command=lambda: self.open_translate_with_program("mousepad"),font=("Noto Color Emoji", 12, "bold"))
+        self.edit_translate_button = tk.Button(self.buttons_frame, text="📝󾓬",
+                                               command=lambda: self.open_translate_with_program("mousepad"),
+                                               font=("Noto Color Emoji", 12, "bold"))
         self.edit_translate_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.edit_translate_button, "Open Ru File")
 
-        self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files, font=("Noto Color Emoji", 12, "bold"))
+        self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files,
+                                       font=("Noto Color Emoji", 12, "bold"))
         self.reload_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.reload_button, "Reload Files")
 
-        self.exit_button = tk.Button(self.buttons_frame, text="❌", command=root.quit, font=("Noto Color Emoji", 12, "bold"))
+        self.exit_button = tk.Button(self.buttons_frame, text="❌", command=root.quit,
+                                     font=("Noto Color Emoji", 12, "bold"))
         self.exit_button.pack(side=tk.LEFT)
         ToolTip(self.exit_button, "Exit")
 
@@ -333,23 +349,28 @@ class SideBySideEditor:
         self.format_frame = tk.Frame(self.top_frame)
         self.format_frame.pack(side=tk.RIGHT, anchor="ne", pady=(5, 0))
 
-        self.bold_button = tk.Button(self.format_frame, text="**B**", command=lambda: self.apply_format("bold"), font=("Arial", 8, "bold"))
+        self.bold_button = tk.Button(self.format_frame, text="**B**", command=lambda: self.apply_format("bold"),
+                                     font=("Arial", 8, "bold"))
         self.bold_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.bold_button, "bold format")
 
-        self.italic_button = tk.Button(self.format_frame, text="*I*", command=lambda: self.apply_format("italic"), font=("Arial", 8, "italic"))
+        self.italic_button = tk.Button(self.format_frame, text="*I*", command=lambda: self.apply_format("italic"),
+                                       font=("Arial", 8, "italic"))
         self.italic_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.italic_button, "italic format")
 
-        self.h1_button = tk.Button(self.format_frame, text="H1", command=lambda: self.apply_format("h1"), font=("Arial", 8))
+        self.h1_button = tk.Button(self.format_frame, text="H1", command=lambda: self.apply_format("h1"),
+                                   font=("Arial", 8))
         self.h1_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h1_button, "h1 title format")
 
-        self.h2_button = tk.Button(self.format_frame, text="H2", command=lambda: self.apply_format("h2"), font=("Arial", 8))
+        self.h2_button = tk.Button(self.format_frame, text="H2", command=lambda: self.apply_format("h2"),
+                                   font=("Arial", 8))
         self.h2_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h2_button, "h2 title format")
 
-        self.h3_button = tk.Button(self.format_frame, text="H3", command=lambda: self.apply_format("h3"), font=("Arial", 8))
+        self.h3_button = tk.Button(self.format_frame, text="H3", command=lambda: self.apply_format("h3"),
+                                   font=("Arial", 8))
         self.h3_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h3_button, "h3 title format")
 
@@ -375,7 +396,7 @@ class SideBySideEditor:
 
         self.left_scroll = tk.Scrollbar(left_frame, command=self.on_scroll_left)
         self.left_text.configure(yscrollcommand=self.on_text_scroll_left)
-        
+
         self.left_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.left_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         left_frame.grid(row=0, column=0, sticky="nsew")
@@ -388,7 +409,7 @@ class SideBySideEditor:
         self.right_line_numbers.attach(self.right_text)
         self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
         self.right_text.configure(yscrollcommand=self.on_text_scroll_right)
-        
+
         self.right_toc = TOCList(right_frame, None)
         self.right_toc.pack(side=tk.RIGHT, fill=tk.Y)
         self.right_toc.text_widget = self.right_text
@@ -538,16 +559,6 @@ class SideBySideEditor:
         except Exception as e:
             show_dialog("Ошибка загрузки", str(e))
 
-    def highlight_current_line_left(self, event=None):
-        self._highlight_line(self.left_text)
-        self.sync_cursor_left()
-        self._highlight_line(self.right_text)
-
-    def highlight_current_line_right(self, event=None):
-        self._highlight_line(self.right_text)
-        self.sync_cursor_right()
-        self._highlight_line(self.left_text)
-
     def _highlight_line(self, text_widget):
         text_widget.tag_remove("current_line", "1.0", "end")
         index = text_widget.index("insert")
@@ -604,7 +615,7 @@ class SideBySideEditor:
 
             self.left_toc.update_toc()
             self.right_toc.update_toc()
-            
+
             # Обновляем заголовок после загрузки файлов
             self.update_file_title()
 
@@ -642,10 +653,10 @@ class SideBySideEditor:
             # Получаем номер текущей строки в левом поле
             index = self.left_text.index("insert")
             line_num = index.split('.')[0]
-            
+
             # Устанавливаем курсор в правом поле на ту же строку
             self.right_text.mark_set("insert", f"{line_num}.0")
-            
+
             # Выравниваем строки параллельно
             self.align_lines_parallel(line_num, TextFieldType.LEFT)
         finally:
@@ -659,10 +670,10 @@ class SideBySideEditor:
             # Получаем номер текущей строки в правом поле
             index = self.right_text.index("insert")
             line_num = index.split('.')[0]
-            
+
             # Устанавливаем курсор в левом поле на ту же строку
             self.left_text.mark_set("insert", f"{line_num}.0")
-            
+
             # Выравниваем строки параллельно
             self.align_lines_parallel(line_num, TextFieldType.RIGHT)
         finally:
@@ -674,17 +685,17 @@ class SideBySideEditor:
             # Показываем строку в центре каждого виджета
             self.left_text.see(f"{line_num}.0")
             self.right_text.see(f"{line_num}.0")
-            
+
             # Обновляем интерфейс
             self.root.update_idletasks()
-            
+
             # Получаем позицию строки в левом поле
             left_bbox = self.left_text.bbox(f"{line_num}.0")
             right_bbox = self.right_text.bbox(f"{line_num}.0")
-            
+
             if left_bbox is None or right_bbox is None:
                 return
-            
+
             # Получаем высоту виджетов
             left_height = self.left_text.winfo_height()
             right_height = self.right_text.winfo_height()
@@ -692,7 +703,7 @@ class SideBySideEditor:
             if textFieldType == TextFieldType.LEFT:
                 # Получаем текущую позицию курсора (в виде строки "line.column")
                 cursor_pos = self.left_text.index(tk.INSERT)
-    
+
                 # Получаем координаты курсора в пикселях относительно виджета
                 bbox = self.left_text.bbox(cursor_pos)
 
@@ -702,7 +713,7 @@ class SideBySideEditor:
             elif textFieldType == TextFieldType.RIGHT:
                 # Получаем текущую позицию курсора (в виде строки "line.column")
                 cursor_pos = self.right_text.index(tk.INSERT)
-    
+
                 # Получаем координаты курсора в пикселях относительно виджета
                 bbox = self.right_text.bbox(cursor_pos)
 
@@ -710,7 +721,7 @@ class SideBySideEditor:
                 self.adjust_scroll_to_position(self.left_text, line_num, y_pixel)
             else:
                 pass
-            
+
         except Exception as e:
             # В случае ошибки просто показываем строки
             self.left_text.see(f"{line_num}.0")
@@ -748,21 +759,20 @@ class SideBySideEditor:
             bbox = text_widget.bbox(f"{line_num}.0")
             if bbox is None:
                 return
-            
+
             current_y = bbox[1]
             diff = target_y - current_y
-            
+
             # Если разность значительная, корректируем
             if abs(diff) > 5:
                 # Получаем высоту строки
                 line_height = bbox[3] if bbox[3] > 0 else 16
-                
+
                 # Вычисляем количество строк для прокрутки
                 scroll_lines = diff / line_height
-                
+
                 # Применяем прокрутку
                 text_widget.yview_scroll(int(-scroll_lines), "units")
-                
         except:
             pass
 
@@ -788,12 +798,13 @@ class SideBySideEditor:
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
 
+
 def show_dialog(title, message, timeout=500):
     dialog = tk.Toplevel()
     dialog.geometry("300x100")
     dialog.resizable(False, False)
 
-    label = tk.Label(dialog, text= title + "\n\n" + message)
+    label = tk.Label(dialog, text=title + "\n\n" + message)
     label.pack(expand=True, padx=20, pady=20)
 
     # Центрируем окно на экране
@@ -803,7 +814,8 @@ def show_dialog(title, message, timeout=500):
     dialog.geometry(f"+{x}+{y}")
 
     # Закрыть окно через timeout миллисекунд
-    dialog.after(timeout, dialog.destroy)
+    dialog.after(ms=timeout, func=dialog.destroy)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
