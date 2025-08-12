@@ -282,7 +282,6 @@ class SideBySideEditor:
 
         # Список программ для выбора
         self.programs = {
-            "📝 Ghostwriter": "ghostwriter",
             "📝 Mousepad": "mousepad",
             "🌐 Yandex Browser": "yandex-browser-stable"
         }
@@ -299,7 +298,6 @@ class SideBySideEditor:
 
         # Список программ для выбора
         self.programs = {
-            "📝 Ghostwriter": "ghostwriter",
             "📝 Mousepad": "mousepad"
         }
 
