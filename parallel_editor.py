@@ -418,6 +418,7 @@ class SideBySideEditor:
         self.right_text.bind("<Right>", self.highlight_current_line_right)
 
         root.bind("<Control-s>", lambda event: self.save_md_files())
+        root.bind("<Control-o>", lambda event: self.load_md_pair_dialog())
 
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
