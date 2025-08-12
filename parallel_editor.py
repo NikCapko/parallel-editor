@@ -317,6 +317,36 @@ class SideBySideEditor:
         container.grid_columnconfigure(0, weight=1)
         container.grid_columnconfigure(2, weight=1)
 
+        # --- Панель форматирования снизу ---
+        format_frame = tk.Frame(root)
+        format_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        self.bold_button = tk.Button(format_frame, text="B", 
+                                   command=lambda: self.apply_format("bold"),
+                                   font=("Arial", 12, "bold"))
+        self.bold_button.pack(side=tk.LEFT, padx=2)
+
+        self.italic_button = tk.Button(format_frame, text="I", 
+                                   command=lambda: self.apply_format("italic"),
+                                   font=("Arial", 12, "italic"))
+        self.italic_button.pack(side=tk.LEFT, padx=2)
+
+        self.h1_button = tk.Button(format_frame, text="H1", 
+                                   command=lambda: self.apply_format("h1"),
+                                   font=("Arial", 12))
+        self.h1_button.pack(side=tk.LEFT, padx=2)
+
+        self.h2_button = tk.Button(format_frame, text="H2", 
+                                   command=lambda: self.apply_format("h2"),
+                                   font=("Arial", 12))
+        self.h2_button.pack(side=tk.LEFT, padx=2)
+
+        self.h3_button = tk.Button(format_frame, text="H3", 
+                                   command=lambda: self.apply_format("h3"),
+                                   font=("Arial", 12))
+        self.h3_button.pack(side=tk.LEFT, padx=2)
+
+
         # Подсветка строки с курсором
         self.left_text.tag_configure("current_line", background="#e6f2ff")
         self.right_text.tag_configure("current_line", background="#e6f2ff")
@@ -341,6 +371,13 @@ class SideBySideEditor:
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def apply_format(self, style):
+        widget = self.root.focus_get()
+        if widget == self.left_text:
+            self.left_text.format_line(style)
+        elif widget == self.right_text:
+            self.right_text.format_line(style)
 
     def on_scroll_left(self, *args):
         self.left_text.yview(*args)
