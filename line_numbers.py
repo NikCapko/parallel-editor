@@ -15,7 +15,7 @@ class LineNumbers(tk.Canvas):
     def on_configure(self, event=None):
         self.redraw()
 
-    def on_key_release(self):
+    def on_key_release(self, event=None):
         self.redraw()
 
     def redraw(self):

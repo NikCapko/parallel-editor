@@ -14,6 +14,7 @@ class TextFieldType:
     LEFT = 1
     RIGHT = 2
 
+
 class SideBySideEditor:
     def __init__(self, root):
         self.root = root
@@ -340,6 +341,10 @@ class SideBySideEditor:
             return
 
         try:
+            # Сохраняем текущую прокрутку
+            left_scroll_pos = self.left_text.yview()[0]
+            right_scroll_pos = self.right_text.yview()[0]
+
             with open(self.orig_path, 'r', encoding='utf-8') as f:
                 original_lines = f.read()
             with open(self.trans_path, 'r', encoding='utf-8') as f:
@@ -356,6 +361,12 @@ class SideBySideEditor:
 
             self.left_toc.update_toc()
             self.right_toc.update_toc()
+
+            # Восстанавливаем прокрутку
+            self.left_text.update_idletasks()  # опционально, но помогает
+            self.root.after_idle(lambda: self.left_text.yview_moveto(left_scroll_pos))
+            self.right_text.update_idletasks()  # опционально, но помогает
+            self.root.after_idle(lambda: self.right_text.yview_moveto(right_scroll_pos))
 
             show_dialog("Готово", "Файлы перезагружены с диска.")
 
@@ -588,6 +599,7 @@ class SideBySideEditor:
         line_start = f"{index.split('.')[0]}.0"
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
+
 
 def show_dialog(title, message, timeout=500):
     dialog = tk.Toplevel()
