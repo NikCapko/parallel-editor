@@ -12,7 +12,7 @@ class LineNumbers(tk.Canvas):
         self.text_widget.bind("<KeyRelease>", self.on_key_release)
         self.text_widget.bind("<ButtonRelease-1>", self.on_key_release)
 
-    def on_configure(self):
+    def on_configure(self, event=None):
         self.redraw()
 
     def on_key_release(self):

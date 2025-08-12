@@ -1,6 +1,5 @@
 import tkinter as tk
 
-
 class TOCList(tk.Listbox):
     def __init__(self, parent, text_widget=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -24,7 +23,7 @@ class TOCList(tk.Listbox):
             elif line.startswith("### "):
                 self.insert(tk.END, f"    {line[4:]}")
 
-    def on_select(self):
+    def on_select(self, event=None):
         if not self.text_widget:
             return
         selection = self.curselection()
