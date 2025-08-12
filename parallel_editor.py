@@ -559,13 +559,6 @@ class SideBySideEditor:
         except Exception as e:
             show_dialog("Ошибка загрузки", str(e))
 
-    def _highlight_line(self, text_widget):
-        text_widget.tag_remove("current_line", "1.0", "end")
-        index = text_widget.index("insert")
-        line_start = f"{index.split('.')[0]}.0"
-        line_end = f"{index.split('.')[0]}.end"
-        text_widget.tag_add("current_line", line_start, line_end)
-
     def load_md_pair_dialog(self):
         file_path = filedialog.askopenfilename(title="Выбери .en.md или .ru.md", filetypes=[("Markdown", "*.md")])
         if not file_path:
@@ -662,7 +655,7 @@ class SideBySideEditor:
         finally:
             self.syncing = False
 
-    def sync_cursor_right(self, event=None):
+    def sync_cursor_right(self):
         if self.syncing:
             return
         self.syncing = True
@@ -679,7 +672,7 @@ class SideBySideEditor:
         finally:
             self.syncing = False
 
-    def align_lines_parallel(self, line_num, textFieldType):
+    def align_lines_parallel(self, line_num, text_field_type):
         """Выравнивает строки параллельно в обоих полях на одной высоте"""
         try:
             # Показываем строку в центре каждого виджета
@@ -696,11 +689,7 @@ class SideBySideEditor:
             if left_bbox is None or right_bbox is None:
                 return
 
-            # Получаем высоту виджетов
-            left_height = self.left_text.winfo_height()
-            right_height = self.right_text.winfo_height()
-
-            if textFieldType == TextFieldType.LEFT:
+            if text_field_type == TextFieldType.LEFT:
                 # Получаем текущую позицию курсора (в виде строки "line.column")
                 cursor_pos = self.left_text.index(tk.INSERT)
 
@@ -710,7 +699,7 @@ class SideBySideEditor:
                 y_pixel = bbox[1]  # Y-координата верхнего края курсора
 
                 self.adjust_scroll_to_position(self.right_text, line_num, y_pixel)
-            elif textFieldType == TextFieldType.RIGHT:
+            elif text_field_type == TextFieldType.RIGHT:
                 # Получаем текущую позицию курсора (в виде строки "line.column")
                 cursor_pos = self.right_text.index(tk.INSERT)
 
@@ -721,8 +710,7 @@ class SideBySideEditor:
                 self.adjust_scroll_to_position(self.left_text, line_num, y_pixel)
             else:
                 pass
-
-        except Exception as e:
+        except:
             # В случае ошибки просто показываем строки
             self.left_text.see(f"{line_num}.0")
             self.right_text.see(f"{line_num}.0")
@@ -797,7 +785,6 @@ class SideBySideEditor:
         line_start = f"{index.split('.')[0]}.0"
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
-
 
 def show_dialog(title, message, timeout=500):
     dialog = tk.Toplevel()
