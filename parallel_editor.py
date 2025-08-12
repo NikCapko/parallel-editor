@@ -274,6 +274,35 @@ class SideBySideEditor:
                                    font=("Noto Color Emoji", 12, "bold"))
         self.exit_button.pack(side=tk.LEFT)
 
+        # Панель форматирования справа
+        self.format_frame = tk.Frame(self.top_frame)
+        self.format_frame.pack(side=tk.RIGHT, anchor="ne", pady=(5, 0))
+
+        self.bold_button = tk.Button(self.format_frame, text="**B**",
+                                     command=lambda: self.apply_format("bold"),
+                                     font=("Arial", 12, "bold"))
+        self.bold_button.pack(side=tk.LEFT, padx=2)
+
+        self.italic_button = tk.Button(self.format_frame, text="*I*",
+                                       command=lambda: self.apply_format("italic"),
+                                       font=("Arial", 12, "italic"))
+        self.italic_button.pack(side=tk.LEFT, padx=2)
+
+        self.h1_button = tk.Button(self.format_frame, text="H1",
+                                   command=lambda: self.apply_format("h1"),
+                                   font=("Arial", 12))
+        self.h1_button.pack(side=tk.LEFT, padx=2)
+
+        self.h2_button = tk.Button(self.format_frame, text="H2",
+                                   command=lambda: self.apply_format("h2"),
+                                   font=("Arial", 12))
+        self.h2_button.pack(side=tk.LEFT, padx=2)
+
+        self.h3_button = tk.Button(self.format_frame, text="H3",
+                                   command=lambda: self.apply_format("h3"),
+                                   font=("Arial", 12))
+        self.h3_button.pack(side=tk.LEFT, padx=2)
+
         # Основной контейнер
         container = tk.Frame(root)
         container.pack(fill=tk.BOTH, expand=True)
@@ -316,36 +345,6 @@ class SideBySideEditor:
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         container.grid_columnconfigure(2, weight=1)
-
-        # --- Панель форматирования снизу ---
-        format_frame = tk.Frame(root)
-        format_frame.pack(fill=tk.X, padx=5, pady=5)
-
-        self.bold_button = tk.Button(format_frame, text="B", 
-                                   command=lambda: self.apply_format("bold"),
-                                   font=("Arial", 12, "bold"))
-        self.bold_button.pack(side=tk.LEFT, padx=2)
-
-        self.italic_button = tk.Button(format_frame, text="I", 
-                                   command=lambda: self.apply_format("italic"),
-                                   font=("Arial", 12, "italic"))
-        self.italic_button.pack(side=tk.LEFT, padx=2)
-
-        self.h1_button = tk.Button(format_frame, text="H1", 
-                                   command=lambda: self.apply_format("h1"),
-                                   font=("Arial", 12))
-        self.h1_button.pack(side=tk.LEFT, padx=2)
-
-        self.h2_button = tk.Button(format_frame, text="H2", 
-                                   command=lambda: self.apply_format("h2"),
-                                   font=("Arial", 12))
-        self.h2_button.pack(side=tk.LEFT, padx=2)
-
-        self.h3_button = tk.Button(format_frame, text="H3", 
-                                   command=lambda: self.apply_format("h3"),
-                                   font=("Arial", 12))
-        self.h3_button.pack(side=tk.LEFT, padx=2)
-
 
         # Подсветка строки с курсором
         self.left_text.tag_configure("current_line", background="#e6f2ff")
