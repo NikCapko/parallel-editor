@@ -31,6 +31,8 @@ class SideBySideEditor:
         # Заголовок с названием файла
         self.file_title = tk.Label(self.top_frame, text="Файл не загружен", font=("Arial", 12, "bold"))
         self.file_title.pack(side=tk.TOP, fill=tk.X)
+        # Привязываем клик левой кнопкой мыши к функции копирования
+        self.file_title.bind("<Button-1>", self.copy_to_clipboard)
 
         # Фрейм для кнопок (в левом верхнем углу)
         self.buttons_frame = tk.Frame(self.top_frame)
@@ -231,6 +233,11 @@ class SideBySideEditor:
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def copy_to_clipboard(self, event=None):
+        # Очищаем буфер обмена и копируем текст метки
+        root.clipboard_clear()
+        root.clipboard_append(self.file_title.cget("text"))
 
     def jump_to_line(self, text_widget, entry_widget):
         try:
