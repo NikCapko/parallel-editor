@@ -279,11 +279,11 @@ class SideBySideEditor:
         def prev_match():
             self.goto_prev_match()
 
-        tk.Button(search_win, text="🔎", command=start_search, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
-        tk.Button(search_win, text="⬆️", command=prev_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
-        tk.Button(search_win, text="⬇️", command=next_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
+        tk.Button(search_win, text="🔎", command=start_search, font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
+        tk.Button(search_win, text="⬆️", command=prev_match, font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
+        tk.Button(search_win, text="⬇️", command=next_match, font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
         tk.Button(search_win, text="❌", command=lambda: self.close_search(search_win),
-                  font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
+                  font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
 
         search_entry.bind("<Return>", lambda e: start_search())
         search_win.bind("<Escape>", lambda e: self.close_search(search_win))
