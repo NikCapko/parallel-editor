@@ -53,23 +53,11 @@ class SideBySideEditor:
         self.save_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.save_button, "Save Files")
 
-        self.edit_original_button = tk.Button(self.buttons_frame, text="📝󾓦",
-                                              command=lambda: self.open_original_with_program("mousepad"),
-                                              font=("Noto Color Emoji", 12, "bold"))
-        self.edit_original_button.pack(side=tk.LEFT, padx=(0, 5))
-        ToolTip(self.edit_original_button, "Edit En File")
-
-        self.translate_original_button = tk.Button(self.buttons_frame, text="🌐󾓦",
-                                                   command=lambda: self.open_original_with_program(
-                                                       "yandex-browser-stable"), font=("Noto Color Emoji", 12, "bold"))
+        self.translate_original_button = tk.Button(self.buttons_frame, text="🌐",
+                                                   command=lambda: self.open_original_with_browser(),
+                                                   font=("Noto Color Emoji", 12, "bold"))
         self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.translate_original_button, "Translate En File")
-
-        self.edit_translate_button = tk.Button(self.buttons_frame, text="📝󾓬",
-                                               command=lambda: self.open_translate_with_program("mousepad"),
-                                               font=("Noto Color Emoji", 12, "bold"))
-        self.edit_translate_button.pack(side=tk.LEFT, padx=(0, 5))
-        ToolTip(self.edit_translate_button, "Open Ru File")
 
         self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files,
                                        font=("Noto Color Emoji", 12, "bold"))
@@ -433,7 +421,7 @@ class SideBySideEditor:
         else:
             self.file_title.config(text="Файл не загружен")
 
-    def open_original_with_program(self, program_cmd):
+    def open_original_with_browser(self):
         """Открывает оригинальный .en.md файл выбранной программой"""
         if not self.orig_path:
             show_dialog("Ошибка", "Оригинальный файл не загружен")
@@ -450,29 +438,7 @@ class SideBySideEditor:
                 show_dialog("Ошибка", "Английский файл не найден")
                 return
 
-            subprocess.Popen([program_cmd, en_path])
-
-        except Exception as e:
-            show_dialog("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
-
-    def open_translate_with_program(self, program_cmd):
-        """Открывает файл перевода .ru.md выбранной программой"""
-        if not self.orig_path:
-            show_dialog("Ошибка", "Файл перевода не загружен")
-            return
-
-        try:
-            # Определяем путь к файлу перевода
-            en_path = ""
-            if self.orig_path.endswith(".ru.md"):
-                en_path = self.orig_path
-            elif self.trans_path.endswith(".ru.md"):
-                en_path = self.trans_path
-            else:
-                show_dialog("Ошибка", "Файл перевода не найден")
-                return
-
-            subprocess.Popen([program_cmd, en_path])
+            subprocess.Popen(["yandex-browser-stable", en_path])
 
         except Exception as e:
             show_dialog("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
