@@ -22,7 +22,7 @@ class SideBySideEditor:
         self.search_started = None
 
         self.root = root
-        self.root.title("Параллельный редактор перевода (.md)")
+        self.root.title("Paraline")
 
         self.orig_path = ""
         self.trans_path = ""
