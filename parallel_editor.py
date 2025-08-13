@@ -18,6 +18,8 @@ class TextFieldType:
 
 class SideBySideEditor:
     def __init__(self, root):
+        self.search_started = None
+
         self.root = root
         self.root.title("Параллельный редактор перевода (.md)")
 
@@ -260,7 +262,10 @@ class SideBySideEditor:
         regex_check = tk.Checkbutton(search_win, text="RegEx", variable=regex_var)
         regex_check.pack(side=tk.LEFT, padx=5, pady=5)
 
+        self.search_started = False
+
         def start_search():
+            self.search_started = True
             term = search_entry.get()
             if not term or not self.search_target_widget:
                 return
@@ -268,11 +273,15 @@ class SideBySideEditor:
             self.goto_next_match()
 
         def next_match():
-            self.goto_next_match()
+            if self.search_started:
+                self.goto_next_match()
+            else:
+                start_search()
 
         def prev_match():
             self.goto_prev_match()
 
+        tk.Button(search_win, text="🔎", command=start_search, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
         tk.Button(search_win, text="⬆️", command=prev_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
         tk.Button(search_win, text="⬇️", command=next_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
 
@@ -282,9 +291,12 @@ class SideBySideEditor:
         if not self.search_matches:
             return
         self.search_index = (self.search_index - 1) % len(self.search_matches)
-        pos = self.search_matches[self.search_index]
-        self.search_target_widget.see(pos)
-        self.search_target_widget.mark_set("insert", pos)
+        start_pos = self.search_matches[self.search_index][0]
+        end_pos = self.search_matches[self.search_index][1]
+        self.search_target_widget.see(start_pos)
+        self.search_target_widget.mark_set("insert", start_pos)
+        self.search_target_widget.tag_remove("search_highlight", "1.0", tk.END)
+        self.search_target_widget.tag_add("search_highlight", start_pos, end_pos)
 
     def index_to_text_pos(self, text, index):
         """Преобразует позицию символа (int) в формат 'строка.символ' для Text"""
@@ -293,7 +305,8 @@ class SideBySideEditor:
         return f"{line}.{col}"
 
     def find_all_matches(self, widget, term, use_regex=False):
-        widget.tag_remove("search_highlight", "1.0", tk.END)
+        #widget.tag_remove("search_highlight", "1.0", tk.END)
+        widget.tag_remove("current_line", "1.0", tk.END)
         self.search_matches.clear()
         self.search_index = -1
 
@@ -304,8 +317,8 @@ class SideBySideEditor:
                 for match in re.finditer(term, text_content, flags=re.IGNORECASE):
                     start_index = self.index_to_text_pos(text_content, match.start())
                     end_index = self.index_to_text_pos(text_content, match.end())
-                    widget.tag_add("search_highlight", start_index, end_index)
-                    self.search_matches.append(start_index)
+                    #widget.tag_add("search_highlight", start_index, end_index)
+                    self.search_matches.append([start_index, end_index])
             except re.error as e:
                 show_dialog("Ошибка RegEx", str(e))
                 return
@@ -316,8 +329,8 @@ class SideBySideEditor:
                 if not start_pos:
                     break
                 end_pos = f"{start_pos}+{len(term)}c"
-                widget.tag_add("search_highlight", start_pos, end_pos)
-                self.search_matches.append(start_pos)
+                #widget.tag_add("search_highlight", start_pos, end_pos)
+                self.search_matches.append([start_pos, end_pos])
                 start_pos = end_pos
 
         widget.tag_config("search_highlight", background="yellow", foreground="black")
@@ -326,9 +339,12 @@ class SideBySideEditor:
         if not self.search_matches:
             return
         self.search_index = (self.search_index + 1) % len(self.search_matches)
-        pos = self.search_matches[self.search_index]
-        self.search_target_widget.see(pos)
-        self.search_target_widget.mark_set("insert", pos)
+        start_pos = self.search_matches[self.search_index][0]
+        end_pos = self.search_matches[self.search_index][1]
+        self.search_target_widget.see(start_pos)
+        self.search_target_widget.mark_set("insert", start_pos)
+        self.search_target_widget.tag_remove("search_highlight", "1.0", tk.END)
+        self.search_target_widget.tag_add("search_highlight", start_pos, end_pos)
 
     def copy_to_clipboard(self, event=None):
         # Очищаем буфер обмена и копируем текст метки
