@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 
 from line_numbers import LineNumbers
 from markdown_text import MarkdownText
@@ -242,8 +243,13 @@ class SideBySideEditor:
         search_win.resizable(False, False)
         search_win.attributes("-topmost", True)
 
+        # Список вариантов
+        options = [
+            ".+\\n.+",
+        ]
+
         tk.Label(search_win, text="Найти:").pack(side=tk.LEFT, padx=5, pady=5)
-        search_entry = tk.Entry(search_win, width=30)
+        search_entry = ttk.Combobox(search_win, values = options, width=30,  state="normal")
         search_entry.pack(side=tk.LEFT, padx=5, pady=5)
 
         regex_var = tk.BooleanVar()
@@ -278,7 +284,12 @@ class SideBySideEditor:
         tk.Button(search_win, text="⬇️", command=next_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
 
         search_entry.bind("<Return>", lambda e: start_search())
-        search_win.bind("<Escape>", lambda e: search_win.destroy())
+        search_win.bind("<Escape>", lambda e: self.close_search(search_win))
+
+    def close_search(self, search_win):
+        self.search_target_widget.tag_remove("search_highlight", "1.0", tk.END)
+        self.search_target_widget.tag_remove("search_highlight_all", "1.0", tk.END)
+        search_win.destroy()
 
     def goto_prev_match(self):
         if not self.search_matches:
@@ -708,7 +719,6 @@ class SideBySideEditor:
         line_start = f"{index.split('.')[0]}.0"
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
-
 
 def show_dialog(title, message, timeout=500):
     dialog = tk.Toplevel()
