@@ -40,10 +40,10 @@ class MarkdownText(tk.Text):
         self.tag_config("list", lmargin2=20, spacing1=5)
 
     def highlight_markdown(self, event=None):
-        """Подсветка Markdown-синтаксиса (адаптированная версия)"""
+        """Подсветка Markdown-синтаксиса"""
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
-            if tag not in ("current_line", "search_highlight"):
+            if tag in ("h1", "h2", "h3", "h4", "h5", "bold", "italic", "bold_italic", "code", "link", "list"):
                 self.tag_remove(tag, "1.0", tk.END)
 
         text = self.get("1.0", tk.END)
