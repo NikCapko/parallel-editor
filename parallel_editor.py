@@ -126,6 +126,18 @@ class SideBySideEditor:
                                                 font=("Noto Color Emoji", 10))
         self.toggle_left_toc_button.pack(side=tk.LEFT, anchor="w", padx=2, pady=2)
 
+        self.left_jump_entry = tk.Entry(left_top_panel, width=8)
+        self.left_jump_entry.pack(side=tk.LEFT, pady=2)
+        self.left_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.left_text, self.left_jump_entry))
+        self.left_jump_entry_button = tk.Button(left_top_panel, text="Go",
+                                                command=lambda: self.jump_to_line(self.left_text, self.left_jump_entry),
+                                                font=("Noto Color Emoji", 10))
+        self.left_jump_entry_button.pack(side=tk.LEFT, anchor="w")
+        self.left_search_button = tk.Button(left_top_panel, text="🔎",
+                                            command=self.on_left_search,
+                                            font=("Noto Color Emoji", 10))
+        self.left_search_button.pack(side=tk.LEFT, anchor="w")
+
         # Основная часть левого редактора
         self.left_frame = tk.Frame(left_editor_frame)
         self.left_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -140,10 +152,6 @@ class SideBySideEditor:
 
         self.left_line_numbers = LineNumbers(left_num_frame, width=50)
         self.left_line_numbers.pack(side=tk.TOP, fill=tk.Y, expand=True)
-
-        self.left_jump_entry = tk.Entry(left_num_frame, width=5)
-        self.left_jump_entry.pack(side=tk.BOTTOM, pady=2)
-        self.left_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.left_text, self.left_jump_entry))
 
         self.left_text = MarkdownText(self.left_frame, wrap="word")
         self.left_toc.text_widget = self.left_text
@@ -165,6 +173,10 @@ class SideBySideEditor:
                                                  command=self.toggle_right_toc,
                                                  font=("Noto Color Emoji", 10))
         self.toggle_right_toc_button.pack(side=tk.RIGHT, anchor="e", padx=2, pady=2)
+        self.right_search_button = tk.Button(right_top_panel, text="🔎",
+                                             command=self.on_right_search,
+                                             font=("Noto Color Emoji", 10))
+        self.right_search_button.pack(side=tk.RIGHT)
 
         # Основная часть правого редактора
         right_frame = tk.Frame(right_editor_frame)
@@ -175,10 +187,6 @@ class SideBySideEditor:
 
         self.right_line_numbers = LineNumbers(right_num_frame, width=40)
         self.right_line_numbers.pack(side=tk.TOP, fill=tk.Y, expand=True)
-
-        self.right_jump_entry = tk.Entry(right_num_frame, width=5)
-        self.right_jump_entry.pack(side=tk.BOTTOM, pady=2)
-        self.right_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.right_text, self.right_jump_entry))
 
         self.right_text = MarkdownText(right_frame, wrap="word")
         self.right_line_numbers.attach(self.right_text)
@@ -234,6 +242,14 @@ class SideBySideEditor:
     def on_ctrl_f(self, event):
         # определяем, в каком текстовом поле был фокус при нажатии
         self.search_target_widget = self.root.focus_get()
+        self.open_search_dialog()
+
+    def on_left_search(self):
+        self.search_target_widget = self.left_text
+        self.open_search_dialog()
+
+    def on_right_search(self):
+        self.search_target_widget = self.right_text
         self.open_search_dialog()
 
     def open_search_dialog(self):
