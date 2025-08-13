@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 import tkinter as tk
@@ -230,9 +231,104 @@ class SideBySideEditor:
         root.bind("<Control-o>", lambda event: self.load_md_pair_dialog())
         root.bind("<Control-r>", lambda event: self.reload_md_files())
 
+        self.search_target_widget = None
+        self.search_matches = []
+        self.search_index = -1
+        root.bind("<Control-f>", self.on_ctrl_f)
+
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def on_ctrl_f(self, event):
+        # определяем, в каком текстовом поле был фокус при нажатии
+        self.search_target_widget = self.root.focus_get()
+        self.open_search_dialog()
+
+    def open_search_dialog(self):
+        search_win = tk.Toplevel(self.root)
+        search_win.title("Поиск")
+        search_win.transient(self.root)
+        search_win.resizable(False, False)
+        search_win.attributes("-topmost", True)
+
+        tk.Label(search_win, text="Найти:").pack(side=tk.LEFT, padx=5, pady=5)
+        search_entry = tk.Entry(search_win, width=30)
+        search_entry.pack(side=tk.LEFT, padx=5, pady=5)
+
+        regex_var = tk.BooleanVar()
+        regex_check = tk.Checkbutton(search_win, text="RegEx", variable=regex_var)
+        regex_check.pack(side=tk.LEFT, padx=5, pady=5)
+
+        def start_search():
+            term = search_entry.get()
+            if not term or not self.search_target_widget:
+                return
+            self.find_all_matches(self.search_target_widget, term, regex_var.get())
+            self.goto_next_match()
+
+        def next_match():
+            self.goto_next_match()
+
+        def prev_match():
+            self.goto_prev_match()
+
+        tk.Button(search_win, text="⬆️", command=prev_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
+        tk.Button(search_win, text="⬇️", command=next_match, font=("Arial", 10)).pack(side=tk.LEFT, padx=2)
+
+        search_entry.bind("<Return>", lambda e: start_search())
+
+    def goto_prev_match(self):
+        if not self.search_matches:
+            return
+        self.search_index = (self.search_index - 1) % len(self.search_matches)
+        pos = self.search_matches[self.search_index]
+        self.search_target_widget.see(pos)
+        self.search_target_widget.mark_set("insert", pos)
+
+    def index_to_text_pos(self, text, index):
+        """Преобразует позицию символа (int) в формат 'строка.символ' для Text"""
+        line = text.count("\n", 0, index) + 1
+        col = index - text.rfind("\n", 0, index) - 1
+        return f"{line}.{col}"
+
+    def find_all_matches(self, widget, term, use_regex=False):
+        widget.tag_remove("search_highlight", "1.0", tk.END)
+        self.search_matches.clear()
+        self.search_index = -1
+
+        text_content = widget.get("1.0", tk.END)
+
+        if use_regex:
+            try:
+                for match in re.finditer(term, text_content, flags=re.IGNORECASE):
+                    start_index = self.index_to_text_pos(text_content, match.start())
+                    end_index = self.index_to_text_pos(text_content, match.end())
+                    widget.tag_add("search_highlight", start_index, end_index)
+                    self.search_matches.append(start_index)
+            except re.error as e:
+                show_dialog("Ошибка RegEx", str(e))
+                return
+        else:
+            start_pos = "1.0"
+            while True:
+                start_pos = widget.search(term, start_pos, nocase=True, stopindex=tk.END)
+                if not start_pos:
+                    break
+                end_pos = f"{start_pos}+{len(term)}c"
+                widget.tag_add("search_highlight", start_pos, end_pos)
+                self.search_matches.append(start_pos)
+                start_pos = end_pos
+
+        widget.tag_config("search_highlight", background="yellow", foreground="black")
+
+    def goto_next_match(self):
+        if not self.search_matches:
+            return
+        self.search_index = (self.search_index + 1) % len(self.search_matches)
+        pos = self.search_matches[self.search_index]
+        self.search_target_widget.see(pos)
+        self.search_target_widget.mark_set("insert", pos)
 
     def copy_to_clipboard(self, event=None):
         # Очищаем буфер обмена и копируем текст метки

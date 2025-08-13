@@ -43,7 +43,7 @@ class MarkdownText(tk.Text):
         """Подсветка Markdown-синтаксиса (адаптированная версия)"""
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
-            if tag != "current_line":
+            if tag not in ("current_line", "search_highlight"):
                 self.tag_remove(tag, "1.0", tk.END)
 
         text = self.get("1.0", tk.END)
