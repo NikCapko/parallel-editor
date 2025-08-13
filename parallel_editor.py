@@ -57,7 +57,7 @@ class SideBySideEditor:
                                                    command=lambda: self.open_original_with_browser(),
                                                    font=("Noto Color Emoji", 12, "bold"))
         self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
-        ToolTip(self.translate_original_button, "Translate En File")
+        ToolTip(self.translate_original_button, "Translate En File With Browser")
 
         self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files,
                                        font=("Noto Color Emoji", 12, "bold"))
