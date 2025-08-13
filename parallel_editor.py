@@ -138,15 +138,15 @@ class SideBySideEditor:
         self.toggle_left_toc_button.pack(side=tk.LEFT, anchor="w", padx=2, pady=2)
 
         # Основная часть левого редактора
-        left_frame = tk.Frame(left_editor_frame)
-        left_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.left_frame = tk.Frame(left_editor_frame)
+        self.left_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # Левый редактор с оглавлением
-        self.left_toc = TOCList(left_frame, None)
+        self.left_toc = TOCList(self.left_frame, None)
         self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
 
         # Фрейм для номеров строк + поле перехода
-        left_num_frame = tk.Frame(left_frame)
+        left_num_frame = tk.Frame(self.left_frame)
         left_num_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         self.left_line_numbers = LineNumbers(left_num_frame, width=50)
@@ -156,10 +156,10 @@ class SideBySideEditor:
         self.left_jump_entry.pack(side=tk.BOTTOM, pady=2)
         self.left_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.left_text, self.left_jump_entry))
 
-        self.left_text = MarkdownText(left_frame, wrap="word")
+        self.left_text = MarkdownText(self.left_frame, wrap="word")
         self.left_toc.text_widget = self.left_text
         self.left_line_numbers.attach(self.left_text)
-        self.left_scroll = tk.Scrollbar(left_frame, command=self.on_scroll_left)
+        self.left_scroll = tk.Scrollbar(self.left_frame, command=self.on_scroll_left)
         self.left_text.configure(yscrollcommand=self.on_text_scroll_left)
 
         self.left_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -373,8 +373,10 @@ class SideBySideEditor:
             self.left_toc.pack_forget()
             self.toggle_left_toc_button.config(text="📑")  # скрыт
         else:
+            self.left_toc = TOCList(self.left_frame, None)
             self.left_toc.pack(side=tk.LEFT, fill=tk.Y, before=self.left_line_numbers)
-            self.left_toc.update_toc()
+            self.left_toc.text_widget = self.left_text
+            self.root.after_idle(self.left_toc.update_toc)
             self.toggle_left_toc_button.config(text="👈")  # показан
 
     def toggle_right_toc(self):
