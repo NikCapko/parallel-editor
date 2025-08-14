@@ -23,9 +23,9 @@ class TOCList(tk.Listbox):
             elif line.startswith("### "):
                 self.insert(tk.END, f"    {line[4:]}")
             elif line.startswith("#### "):
-                self.insert(tk.END, f"    {line[5:]}")
+                self.insert(tk.END, f"      {line[5:]}")
             elif line.startswith("##### "):
-                self.insert(tk.END, f"    {line[6:]}")
+                self.insert(tk.END, f"        {line[6:]}")
 
     def on_select(self, event=None):
         if not self.text_widget:
