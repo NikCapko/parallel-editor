@@ -128,9 +128,9 @@ class SideBySideEditor:
 
         self.left_jump_entry = tk.Entry(left_top_panel, width=8)
         self.left_jump_entry.pack(side=tk.LEFT, pady=2)
-        self.left_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.left_text, self.left_jump_entry))
+        self.left_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.left_jump_entry))
         self.left_jump_entry_button = tk.Button(left_top_panel, text="Go",
-                                                command=lambda: self.jump_to_line(self.left_text, self.left_jump_entry),
+                                                command=lambda: self.jump_to_line(self.left_jump_entry),
                                                 font=("Noto Color Emoji", 10))
         self.left_jump_entry_button.pack(side=tk.LEFT, anchor="w")
         self.left_search_button = tk.Button(left_top_panel, text="🔎",
@@ -380,12 +380,18 @@ class SideBySideEditor:
         root.clipboard_clear()
         root.clipboard_append(self.file_title.cget("text"))
 
-    def jump_to_line(self, text_widget, entry_widget):
+    def jump_to_line(self, entry_widget):
         try:
             line_num = int(entry_widget.get())
-            text_widget.mark_set("insert", f"{line_num}.0")
-            text_widget.see(f"{line_num}.0")
-            text_widget.focus_set()
+
+            self.left_text.mark_set("insert", f"{line_num}.0")
+            self.left_text.see(f"{line_num}.0")
+
+            self.right_text.mark_set("insert", f"{line_num}.0")
+            self.right_text.see(f"{line_num}.0")
+
+            self.left_text.focus_set()
+
         except ValueError:
             pass
 
