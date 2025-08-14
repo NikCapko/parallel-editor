@@ -625,47 +625,44 @@ class SideBySideEditor:
             self.syncing = False
 
     def align_lines_parallel(self, line_num, text_field_type):
-        """Выравнивает строки параллельно в обоих полях на одной высоте"""
         try:
             # Показываем строку в центре каждого виджета
             self.left_text.see(f"{line_num}.0")
             self.right_text.see(f"{line_num}.0")
 
-            # Обновляем интерфейс
             self.root.update_idletasks()
 
-            # Получаем позицию строки в левом поле
-            left_bbox = self.left_text.bbox(f"{line_num}.0")
-            right_bbox = self.right_text.bbox(f"{line_num}.0")
-
-            if left_bbox is None or right_bbox is None:
-                return
-
             if text_field_type == TextFieldType.LEFT:
-                # Получаем текущую позицию курсора (в виде строки "line.column")
                 cursor_pos = self.left_text.index(tk.INSERT)
-
-                # Получаем координаты курсора в пикселях относительно виджета
                 bbox = self.left_text.bbox(cursor_pos)
-
-                y_pixel = bbox[1]  # Y-координата верхнего края курсора
-
-                self.adjust_scroll_to_position(self.right_text, line_num, y_pixel)
+                if bbox:
+                    y_pixel = bbox[1]
+                    # Передаём реальный индекс позиции курсора, а не начало строки
+                    self.adjust_scroll_to_position(self.right_text, cursor_pos, y_pixel)
             elif text_field_type == TextFieldType.RIGHT:
-                # Получаем текущую позицию курсора (в виде строки "line.column")
                 cursor_pos = self.right_text.index(tk.INSERT)
-
-                # Получаем координаты курсора в пикселях относительно виджета
                 bbox = self.right_text.bbox(cursor_pos)
-
-                y_pixel = bbox[1]  # Y-координата верхнего края курсора
-                self.adjust_scroll_to_position(self.left_text, line_num, y_pixel)
-            else:
-                pass
+                if bbox:
+                    y_pixel = bbox[1]
+                    self.adjust_scroll_to_position(self.left_text, cursor_pos, y_pixel)
         except:
-            # В случае ошибки просто показываем строки
             self.left_text.see(f"{line_num}.0")
             self.right_text.see(f"{line_num}.0")
+
+    def adjust_scroll_to_position(self, text_widget, target_index, target_y):
+        """Корректирует прокрутку, чтобы указанная позиция была на заданной высоте"""
+        try:
+            bbox = text_widget.bbox(target_index)
+            if bbox is None:
+                return
+            current_y = bbox[1]
+            diff = target_y - current_y
+            if abs(diff) > 5:
+                line_height = bbox[3] if bbox[3] > 0 else 16
+                scroll_lines = diff / line_height
+                text_widget.yview_scroll(int(-scroll_lines), "units")
+        except:
+            pass
 
     def save_md_files(self):
         if not self.orig_path or not self.trans_path:
@@ -691,30 +688,6 @@ class SideBySideEditor:
 
         except Exception as e:
             show_dialog("Ошибка сохранения", str(e))
-
-    def adjust_scroll_to_position(self, text_widget, line_num, target_y):
-        """Корректирует прокрутку чтобы строка была на заданной высоте"""
-        try:
-            # Получаем текущую позицию строки
-            bbox = text_widget.bbox(f"{line_num}.0")
-            if bbox is None:
-                return
-
-            current_y = bbox[1]
-            diff = target_y - current_y
-
-            # Если разность значительная, корректируем
-            if abs(diff) > 5:
-                # Получаем высоту строки
-                line_height = bbox[3] if bbox[3] > 0 else 16
-
-                # Вычисляем количество строк для прокрутки
-                scroll_lines = diff / line_height
-
-                # Применяем прокрутку
-                text_widget.yview_scroll(int(-scroll_lines), "units")
-        except:
-            pass
 
     def highlight_current_line_left(self, event=None):
         # даём курсору переместиться, затем подсвечиваем
