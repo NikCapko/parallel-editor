@@ -157,7 +157,6 @@ class SideBySideEditor:
         self.left_toc.text_widget = self.left_text
         self.left_line_numbers.attach(self.left_text)
         self.left_scroll = tk.Scrollbar(self.left_frame, command=self.on_scroll_left)
-        self.left_text.configure(yscrollcommand=self.on_text_scroll_left)
 
         self.left_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.left_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -191,7 +190,6 @@ class SideBySideEditor:
         self.right_text = MarkdownText(right_frame, wrap="word")
         self.right_line_numbers.attach(self.right_text)
         self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
-        self.right_text.configure(yscrollcommand=self.on_text_scroll_right)
 
         self.right_toc = TOCList(right_frame, None)
         self.right_toc.pack(side=tk.RIGHT, fill=tk.Y)
@@ -229,6 +227,9 @@ class SideBySideEditor:
         root.bind("<Control-s>", lambda event: self.save_md_files())
         root.bind("<Control-o>", lambda event: self.load_md_pair_dialog())
         root.bind("<Control-r>", lambda event: self.reload_md_files())
+
+        self.left_text.configure(yscrollcommand=self.on_text_scroll_left)
+        self.right_text.configure(yscrollcommand=self.on_text_scroll_right)
 
         self.search_target_widget = None
         self.search_matches = []
@@ -375,6 +376,36 @@ class SideBySideEditor:
         self.search_target_widget.tag_remove("search_highlight", "1.0", tk.END)
         self.search_target_widget.tag_add("search_highlight", start_pos, end_pos)
 
+    def on_text_scroll_left(self, *args):
+        if not self.syncing:
+            self.syncing = True
+            try:
+                cursor_pos = self.left_text.index(tk.INSERT)
+                bbox = self.left_text.bbox(cursor_pos)
+                if bbox:
+                    self.adjust_scroll_to_position(self.right_text, cursor_pos, bbox[1])
+                else:
+                    self.right_text.yview_moveto(args[0])
+            finally:
+                self.syncing = False
+        self.left_line_numbers.redraw()
+        self.left_scroll.set(args[0], args[1])
+
+    def on_text_scroll_right(self, *args):
+        if not self.syncing:
+            self.syncing = True
+            try:
+                cursor_pos = self.right_text.index(tk.INSERT)
+                bbox = self.right_text.bbox(cursor_pos)
+                if bbox:
+                    self.adjust_scroll_to_position(self.left_text, cursor_pos, bbox[1])
+                else:
+                    self.left_text.yview_moveto(args[0])
+            finally:
+                self.syncing = False
+        self.right_line_numbers.redraw()
+        self.right_scroll.set(args[0], args[1])
+
     def copy_to_clipboard(self, event=None):
         # Очищаем буфер обмена и копируем текст метки
         root.clipboard_clear()
@@ -439,14 +470,6 @@ class SideBySideEditor:
         self.right_text.yview(*args)
         self.right_line_numbers.redraw()
         self.right_scroll.set(*args)
-
-    def on_text_scroll_left(self, *args):
-        self.left_line_numbers.redraw()
-        self.left_scroll.set(args[0], args[1])  # обновляем положение ползунка
-
-    def on_text_scroll_right(self, *args):
-        self.right_line_numbers.redraw()
-        self.right_scroll.set(args[0], args[1])
 
     def update_file_title(self):
         """Обновляет заголовок с названием файла"""
