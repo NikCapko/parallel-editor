@@ -406,34 +406,10 @@ class SideBySideEditor:
         self.search_target_widget.tag_add("search_highlight", start_pos, end_pos)
 
     def on_text_scroll_left(self, *args):
-        if not self.syncing:
-            self.syncing = True
-            try:
-                cursor_pos = self.left_text.index(tk.INSERT)
-                bbox = self.left_text.bbox(cursor_pos)
-                if bbox:
-                    #self.adjust_scroll_to_position(self.right_text, cursor_pos, bbox[1])
-                    pass
-                else:
-                    self.right_text.yview_moveto(args[0])
-            finally:
-                self.syncing = False
         self.left_line_numbers.redraw()
         self.left_scroll.set(args[0], args[1])
 
     def on_text_scroll_right(self, *args):
-        if not self.syncing:
-            self.syncing = True
-            try:
-                cursor_pos = self.right_text.index(tk.INSERT)
-                bbox = self.right_text.bbox(cursor_pos)
-                if bbox:
-                    #self.adjust_scroll_to_position(self.left_text, cursor_pos, bbox[1])
-                    pass
-                else:
-                    self.left_text.yview_moveto(args[0])
-            finally:
-                self.syncing = False
         self.right_line_numbers.redraw()
         self.right_scroll.set(args[0], args[1])
 
