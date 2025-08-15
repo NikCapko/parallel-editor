@@ -412,7 +412,8 @@ class SideBySideEditor:
                 cursor_pos = self.left_text.index(tk.INSERT)
                 bbox = self.left_text.bbox(cursor_pos)
                 if bbox:
-                    self.adjust_scroll_to_position(self.right_text, cursor_pos, bbox[1])
+                    #self.adjust_scroll_to_position(self.right_text, cursor_pos, bbox[1])
+                    pass
                 else:
                     self.right_text.yview_moveto(args[0])
             finally:
@@ -427,7 +428,8 @@ class SideBySideEditor:
                 cursor_pos = self.right_text.index(tk.INSERT)
                 bbox = self.right_text.bbox(cursor_pos)
                 if bbox:
-                    self.adjust_scroll_to_position(self.left_text, cursor_pos, bbox[1])
+                    #self.adjust_scroll_to_position(self.left_text, cursor_pos, bbox[1])
+                    pass
                 else:
                     self.left_text.yview_moveto(args[0])
             finally:
