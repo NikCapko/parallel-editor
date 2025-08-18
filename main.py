@@ -413,6 +413,7 @@ class SideBySideEditor:
         # Список вариантов
         options = [
             ".+\\n.+",
+            "\\n\\n\\n"
         ]
 
         tk.Label(search_win, text="Найти:").pack(side=tk.LEFT, padx=5, pady=5)
