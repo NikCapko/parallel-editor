@@ -16,6 +16,8 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-1>", lambda e: self.format_line("h1"))
         self.bind("<Control-Key-2>", lambda e: self.format_line("h2"))
         self.bind("<Control-Key-3>", lambda e: self.format_line("h3"))
+        self.bind("<Control-Key-4>", lambda e: self.format_line("h4"))
+        self.bind("<Control-Key-5>", lambda e: self.format_line("h5"))
 
         self.bind_all("<KeyRelease>", lambda e: self.highlight_markdown())
         self.bind("<<Paste>>", lambda e: self.highlight_markdown())
