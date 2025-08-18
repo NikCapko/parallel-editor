@@ -23,6 +23,8 @@ class MarkdownText(tk.Text):
 
     def configure_tags(self):
         """Настройка стилей для Markdown-элементов"""
+        # Информация о файле
+        self.tag_config("info", font=("Arial", 12, "bold italic"), foreground="#4B0082")
         # Заголовки
         self.tag_config("h1", font=("Arial", 18, "bold"), foreground="#2b6cb0")
         self.tag_config("h2", font=("Arial", 16, "bold"), foreground="#2c5282")
@@ -43,7 +45,7 @@ class MarkdownText(tk.Text):
         """Подсветка Markdown-синтаксиса"""
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
-            if tag in ("h1", "h2", "h3", "h4", "h5", "bold", "italic", "bold_italic", "code", "link", "list"):
+            if tag in ("info", "h1", "h2", "h3", "h4", "h5", "bold", "italic", "bold_italic", "code", "link", "list"):
                 self.tag_remove(tag, "1.0", tk.END)
 
         text = self.get("1.0", tk.END)
@@ -55,7 +57,9 @@ class MarkdownText(tk.Text):
             line_end = f"{i}.end"
 
             # Заголовки
-            if re.match(r"^#\s", line):
+            if re.match(r"^%\s", line):
+                self.tag_add("info", line_start, line_end)
+            elif re.match(r"^#\s", line):
                 self.tag_add("h1", line_start, line_end)
             elif re.match(r"^##\s", line):
                 self.tag_add("h2", line_start, line_end)
