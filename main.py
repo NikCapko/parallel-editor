@@ -21,6 +21,8 @@ from toc_list import TOCList
 from tooltip import ToolTip
 
 
+CONFIG_FILE = "replacements.json"
+
 class TextFieldType:
     LEFT = 1
     RIGHT = 2
@@ -51,17 +53,24 @@ class SideBySideEditor:
         self.buttons_frame = tk.Frame(self.top_frame)
         self.buttons_frame.pack(side=tk.LEFT, anchor="nw", pady=(5, 0))
 
-        # Кнопки с иконками
+        ## Кнопки с иконками
+
+        # load files
+
         self.load_button = tk.Button(self.buttons_frame, text="📂",
                                      command=self.load_md_pair_dialog,
                                      font=("Noto Color Emoji", 12, "bold"))
         self.load_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.load_button, "Open File")
 
+        # save files
+
         self.save_button = tk.Button(self.buttons_frame, text="💾", command=self.save_md_files,
                                      font=("Noto Color Emoji", 12, "bold"))
         self.save_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.save_button, "Save Files")
+
+        # export files to book
 
         self.export_book_menu_button = tk.Menubutton(self.buttons_frame, text="📖", relief=tk.RAISED,
                                                      font=("Noto Color Emoji", 12))
@@ -84,11 +93,28 @@ class SideBySideEditor:
         self.export_book_menu_button.config(menu=self.export_book_menu)
         self.export_book_menu_button.pack(side=tk.LEFT, padx=(0, 5))
 
-        self.translate_original_button = tk.Button(self.buttons_frame, text="🌐",
-                                                   command=lambda: self.open_original_with_browser(),
-                                                   font=("Noto Color Emoji", 12, "bold"))
-        self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
+        # translate en file
+
+        self.translate_original_button = tk.Menubutton(self.buttons_frame, text="🌐", relief=tk.RAISED,
+                                                     font=("Noto Color Emoji", 12))
+        self.translate_original_menu = tk.Menu(self.translate_original_button, tearoff=0,
+                                        font=("Arial", 12, "bold"))
         ToolTip(self.translate_original_button, "Translate En File With Browser")
+
+        # Список вариантов для выбора
+        self.translate_variants = {
+            "Yandex Browser": "yandex-browser-stable",
+            "Google Chrome": "google-chrome-stable",
+        }
+
+        for label, key in self.translate_variants.items():
+            self.translate_original_menu.add_command(label=label,
+                                              command=lambda cmd=key: self.open_original_with_browser(cmd))
+
+        self.translate_original_button.config(menu=self.translate_original_menu)
+        self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
+
+        # reload files
 
         self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files,
                                        font=("Noto Color Emoji", 12, "bold"))
@@ -99,6 +125,11 @@ class SideBySideEditor:
                                      font=("Noto Color Emoji", 12, "bold"))
         self.info_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.info_button, "File Info")
+        
+        self.correct_button = tk.Button(self.buttons_frame, text="📝", command=self.correct_text,
+                                     font=("Noto Color Emoji", 12, "bold"))
+        self.correct_button.pack(side=tk.LEFT, padx=(0, 5))
+        ToolTip(self.correct_button, "Correct text")
 
         self.exit_button = tk.Button(self.buttons_frame, text="❌", command=root.quit,
                                      font=("Noto Color Emoji", 12, "bold"))
@@ -472,6 +503,63 @@ class SideBySideEditor:
         self.search_target_widget.tag_remove("search_highlight", "1.0", tk.END)
         self.search_target_widget.tag_add("search_highlight", start_pos, end_pos)
 
+    def correct_text(self):
+        self.correct_text_frame_content(self.left_text)
+        self.correct_text_frame_content(self.right_text)
+        self.left_toc.update_toc()
+        self.right_toc.update_toc()
+
+    def correct_text_frame_content(self, text_frame):
+        text = text_frame.get("1.0", tk.END).strip()
+        simple_repl, regex_repl = self.load_replacements(CONFIG_FILE)
+        text = self.normalize_text(text, simple_repl, regex_repl)
+        text_frame.delete("1.0", tk.END)
+        text_frame.insert(tk.END, text)
+        text_frame.highlight_markdown()
+
+    def load_replacements(self, config_path: str):
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        return config.get("simple", {}), config.get("regex", {})
+
+
+    def fix_line_start_spaces(self, content: str) -> str:
+        new_lines = []
+        for line in content.splitlines():
+            stripped = line.lstrip()
+            if line.startswith(("#", "%")) or stripped.startswith("*"):
+                # служебные строки и списки остаются как есть
+                new_lines.append(line)
+            else:
+                # убираем лишние пробелы и добавляем ровно один
+                if stripped:
+                    line = " " + stripped
+                else:
+                    line = stripped
+                new_lines.append(line)
+        return "\n".join(new_lines)
+
+
+    def normalize_text(self, content: str, simple_repl: dict, regex_repl: dict) -> str:
+        # Простые замены
+        for old, new in simple_repl.items():
+            content = content.replace(old, new)
+
+        # Замены через регулярки
+        for pattern, repl in regex_repl.items():
+            content = re.sub(pattern, repl, content, flags=re.MULTILINE)
+
+        # Убираем пробелы перед \n
+        content = re.sub(r' \n', '\n', content)
+        content = re.sub(r'\n #', '\n#', content)
+        content = re.sub(r'\n %', '\n%', content)
+        content = re.sub(r'\n\n%', '\n%', content)
+
+        # Гарантируем ровно один пробел в начале строки
+        content = self.fix_line_start_spaces(content)
+
+        return content.strip() + "\n"
+
     def index_to_text_pos(self, text, index):
         """Преобразует позицию символа (int) в формат 'строка.символ' для Text"""
         line = text.count("\n", 0, index) + 1
@@ -608,7 +696,7 @@ class SideBySideEditor:
         else:
             self.file_title.config(text="Файл не загружен")
 
-    def open_original_with_browser(self):
+    def open_original_with_browser(self, app):
         """Открывает оригинальный .en.md файл выбранной программой"""
         if not self.orig_path:
             show_dialog("Ошибка", "Оригинальный файл не загружен")
@@ -625,7 +713,7 @@ class SideBySideEditor:
                 show_dialog("Ошибка", "Английский файл не найден")
                 return
 
-            subprocess.Popen(["yandex-browser-stable", en_path])
+            subprocess.Popen([app, en_path])
 
         except Exception as e:
             show_dialog("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
