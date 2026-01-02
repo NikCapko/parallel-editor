@@ -4,24 +4,23 @@ import re
 import subprocess
 import sys
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk
+from tkinter import filedialog, ttk
 
 from ebooklib import epub
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from line_numbers import LineNumbers
 from markdown_text import MarkdownText
 from toc_list import TOCList
 from tooltip import ToolTip
 
-
 CONFIG_FILE = "replacements.json"
+
 
 class TextFieldType:
     LEFT = 1
@@ -44,7 +43,9 @@ class SideBySideEditor:
         self.top_frame.pack(fill=tk.X, padx=5, pady=5)
 
         # Заголовок с названием файла
-        self.file_title = tk.Label(self.top_frame, text="Файл не загружен", font=("Arial", 12, "bold"))
+        self.file_title = tk.Label(
+            self.top_frame, text="Файл не загружен", font=("Arial", 12, "bold")
+        )
         self.file_title.pack(side=tk.TOP, fill=tk.X)
         # Привязываем клик левой кнопкой мыши к функции копирования
         self.file_title.bind("<Button-1>", self.copy_to_clipboard)
@@ -57,25 +58,37 @@ class SideBySideEditor:
 
         # load files
 
-        self.load_button = tk.Button(self.buttons_frame, text="📂",
-                                     command=self.load_md_pair_dialog,
-                                     font=("Noto Color Emoji", 12, "bold"))
+        self.load_button = tk.Button(
+            self.buttons_frame,
+            text="📂",
+            command=self.load_md_pair_dialog,
+            font=("Noto Color Emoji", 12, "bold"),
+        )
         self.load_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.load_button, "Open File")
 
         # save files
 
-        self.save_button = tk.Button(self.buttons_frame, text="💾", command=self.save_md_files,
-                                     font=("Noto Color Emoji", 12, "bold"))
+        self.save_button = tk.Button(
+            self.buttons_frame,
+            text="💾",
+            command=self.save_md_files,
+            font=("Noto Color Emoji", 12, "bold"),
+        )
         self.save_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.save_button, "Save Files")
 
         # export files to book
 
-        self.export_book_menu_button = tk.Menubutton(self.buttons_frame, text="📖", relief=tk.RAISED,
-                                                     font=("Noto Color Emoji", 12))
-        self.export_book_menu = tk.Menu(self.export_book_menu_button, tearoff=0,
-                                        font=("Arial", 12, "bold"))
+        self.export_book_menu_button = tk.Menubutton(
+            self.buttons_frame,
+            text="📖",
+            relief=tk.RAISED,
+            font=("Noto Color Emoji", 12),
+        )
+        self.export_book_menu = tk.Menu(
+            self.export_book_menu_button, tearoff=0, font=("Arial", 12, "bold")
+        )
         ToolTip(self.export_book_menu_button, "Export Parallel Book")
 
         # Список вариантов для выбора
@@ -87,18 +100,24 @@ class SideBySideEditor:
         }
 
         for label, key in self.export_variants.items():
-            self.export_book_menu.add_command(label=label,
-                                              command=lambda cmd=key: self.export_parallel_book(cmd))
+            self.export_book_menu.add_command(
+                label=label, command=lambda cmd=key: self.export_parallel_book(cmd)
+            )
 
         self.export_book_menu_button.config(menu=self.export_book_menu)
         self.export_book_menu_button.pack(side=tk.LEFT, padx=(0, 5))
 
         # translate en file
 
-        self.translate_original_button = tk.Menubutton(self.buttons_frame, text="🌐", relief=tk.RAISED,
-                                                     font=("Noto Color Emoji", 12))
-        self.translate_original_menu = tk.Menu(self.translate_original_button, tearoff=0,
-                                        font=("Arial", 12, "bold"))
+        self.translate_original_button = tk.Menubutton(
+            self.buttons_frame,
+            text="🌐",
+            relief=tk.RAISED,
+            font=("Noto Color Emoji", 12),
+        )
+        self.translate_original_menu = tk.Menu(
+            self.translate_original_button, tearoff=0, font=("Arial", 12, "bold")
+        )
         ToolTip(self.translate_original_button, "Translate En File With Browser")
 
         # Список вариантов для выбора
@@ -108,31 +127,49 @@ class SideBySideEditor:
         }
 
         for label, key in self.translate_variants.items():
-            self.translate_original_menu.add_command(label=label,
-                                              command=lambda cmd=key: self.open_original_with_browser(cmd))
+            self.translate_original_menu.add_command(
+                label=label,
+                command=lambda cmd=key: self.open_original_with_browser(cmd),
+            )
 
         self.translate_original_button.config(menu=self.translate_original_menu)
         self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
 
         # reload files
 
-        self.reload_button = tk.Button(self.buttons_frame, text="🔄", command=self.reload_md_files,
-                                       font=("Noto Color Emoji", 12, "bold"))
+        self.reload_button = tk.Button(
+            self.buttons_frame,
+            text="🔄",
+            command=self.reload_md_files,
+            font=("Noto Color Emoji", 12, "bold"),
+        )
         self.reload_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.reload_button, "Reload Files")
 
-        self.info_button = tk.Button(self.buttons_frame, text="❕", command=self.open_metadata_dialog,
-                                     font=("Noto Color Emoji", 12, "bold"))
+        self.info_button = tk.Button(
+            self.buttons_frame,
+            text="❕",
+            command=self.open_metadata_dialog,
+            font=("Noto Color Emoji", 12, "bold"),
+        )
         self.info_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.info_button, "File Info")
-        
-        self.correct_button = tk.Button(self.buttons_frame, text="📝", command=self.correct_text,
-                                     font=("Noto Color Emoji", 12, "bold"))
+
+        self.correct_button = tk.Button(
+            self.buttons_frame,
+            text="📝",
+            command=self.correct_text,
+            font=("Noto Color Emoji", 12, "bold"),
+        )
         self.correct_button.pack(side=tk.LEFT, padx=(0, 5))
         ToolTip(self.correct_button, "Correct text")
 
-        self.exit_button = tk.Button(self.buttons_frame, text="❌", command=root.quit,
-                                     font=("Noto Color Emoji", 12, "bold"))
+        self.exit_button = tk.Button(
+            self.buttons_frame,
+            text="❌",
+            command=root.quit,
+            font=("Noto Color Emoji", 12, "bold"),
+        )
         self.exit_button.pack(side=tk.LEFT)
         ToolTip(self.exit_button, "Exit")
 
@@ -140,38 +177,66 @@ class SideBySideEditor:
         self.format_frame = tk.Frame(self.top_frame)
         self.format_frame.pack(side=tk.RIGHT, anchor="ne", pady=(5, 0))
 
-        self.bold_button = tk.Button(self.format_frame, text="**B**", command=lambda: self.apply_format("bold"),
-                                     font=("Arial", 8, "bold"))
+        self.bold_button = tk.Button(
+            self.format_frame,
+            text="**B**",
+            command=lambda: self.apply_format("bold"),
+            font=("Arial", 8, "bold"),
+        )
         self.bold_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.bold_button, "bold format")
 
-        self.italic_button = tk.Button(self.format_frame, text="*I*", command=lambda: self.apply_format("italic"),
-                                       font=("Arial", 8, "italic"))
+        self.italic_button = tk.Button(
+            self.format_frame,
+            text="*I*",
+            command=lambda: self.apply_format("italic"),
+            font=("Arial", 8, "italic"),
+        )
         self.italic_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.italic_button, "italic format")
 
-        self.h1_button = tk.Button(self.format_frame, text="H1", command=lambda: self.apply_format("h1"),
-                                   font=("Arial", 8))
+        self.h1_button = tk.Button(
+            self.format_frame,
+            text="H1",
+            command=lambda: self.apply_format("h1"),
+            font=("Arial", 8),
+        )
         self.h1_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h1_button, "h1 title format")
 
-        self.h2_button = tk.Button(self.format_frame, text="H2", command=lambda: self.apply_format("h2"),
-                                   font=("Arial", 8))
+        self.h2_button = tk.Button(
+            self.format_frame,
+            text="H2",
+            command=lambda: self.apply_format("h2"),
+            font=("Arial", 8),
+        )
         self.h2_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h2_button, "h2 title format")
 
-        self.h3_button = tk.Button(self.format_frame, text="H3", command=lambda: self.apply_format("h3"),
-                                   font=("Arial", 8))
+        self.h3_button = tk.Button(
+            self.format_frame,
+            text="H3",
+            command=lambda: self.apply_format("h3"),
+            font=("Arial", 8),
+        )
         self.h3_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h3_button, "h3 title format")
 
-        self.h4_button = tk.Button(self.format_frame, text="H4", command=lambda: self.apply_format("h4"),
-                                   font=("Arial", 8))
+        self.h4_button = tk.Button(
+            self.format_frame,
+            text="H4",
+            command=lambda: self.apply_format("h4"),
+            font=("Arial", 8),
+        )
         self.h4_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h4_button, "h4 title format")
 
-        self.h5_button = tk.Button(self.format_frame, text="H5", command=lambda: self.apply_format("h5"),
-                                   font=("Arial", 8))
+        self.h5_button = tk.Button(
+            self.format_frame,
+            text="H5",
+            command=lambda: self.apply_format("h5"),
+            font=("Arial", 8),
+        )
         self.h5_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.h5_button, "h5 title format")
 
@@ -187,21 +252,32 @@ class SideBySideEditor:
         # Панель с кнопкой для левого TOC
         left_top_panel = tk.Frame(left_editor_frame)
         left_top_panel.pack(side=tk.TOP, fill=tk.X)
-        self.toggle_left_toc_button = tk.Button(left_top_panel, text="👈",
-                                                command=self.toggle_left_toc,
-                                                font=("Noto Color Emoji", 10))
+        self.toggle_left_toc_button = tk.Button(
+            left_top_panel,
+            text="👈",
+            command=self.toggle_left_toc,
+            font=("Noto Color Emoji", 10),
+        )
         self.toggle_left_toc_button.pack(side=tk.LEFT, anchor="w", padx=2, pady=2)
 
         self.left_jump_entry = tk.Entry(left_top_panel, width=8)
         self.left_jump_entry.pack(side=tk.LEFT, pady=2)
-        self.left_jump_entry.bind("<Return>", lambda e: self.jump_to_line(self.left_jump_entry))
-        self.left_jump_entry_button = tk.Button(left_top_panel, text="Go",
-                                                command=lambda: self.jump_to_line(self.left_jump_entry),
-                                                font=("Noto Color Emoji", 10))
+        self.left_jump_entry.bind(
+            "<Return>", lambda e: self.jump_to_line(self.left_jump_entry)
+        )
+        self.left_jump_entry_button = tk.Button(
+            left_top_panel,
+            text="Go",
+            command=lambda: self.jump_to_line(self.left_jump_entry),
+            font=("Noto Color Emoji", 10),
+        )
         self.left_jump_entry_button.pack(side=tk.LEFT, anchor="w")
-        self.left_search_button = tk.Button(left_top_panel, text="🔎",
-                                            command=self.on_left_search,
-                                            font=("Noto Color Emoji", 10))
+        self.left_search_button = tk.Button(
+            left_top_panel,
+            text="🔎",
+            command=self.on_left_search,
+            font=("Noto Color Emoji", 10),
+        )
         self.left_search_button.pack(side=tk.LEFT, anchor="w")
 
         # Основная часть левого редактора
@@ -234,13 +310,19 @@ class SideBySideEditor:
         # Панель с кнопкой для правого TOC
         right_top_panel = tk.Frame(right_editor_frame)
         right_top_panel.pack(side=tk.TOP, fill=tk.X)
-        self.toggle_right_toc_button = tk.Button(right_top_panel, text="👉",
-                                                 command=self.toggle_right_toc,
-                                                 font=("Noto Color Emoji", 10))
+        self.toggle_right_toc_button = tk.Button(
+            right_top_panel,
+            text="👉",
+            command=self.toggle_right_toc,
+            font=("Noto Color Emoji", 10),
+        )
         self.toggle_right_toc_button.pack(side=tk.RIGHT, anchor="e", padx=2, pady=2)
-        self.right_search_button = tk.Button(right_top_panel, text="🔎",
-                                             command=self.on_right_search,
-                                             font=("Noto Color Emoji", 10))
+        self.right_search_button = tk.Button(
+            right_top_panel,
+            text="🔎",
+            command=self.on_right_search,
+            font=("Noto Color Emoji", 10),
+        )
         self.right_search_button.pack(side=tk.RIGHT)
 
         # Основная часть правого редактора
@@ -272,8 +354,12 @@ class SideBySideEditor:
         container.grid_columnconfigure(2, weight=1)
 
         # Подсветка строки с курсором
-        self.left_text.tag_configure("current_line", background="#e7ff00", selectbackground="#77b8ff")
-        self.right_text.tag_configure("current_line", background="#e7ff00", selectbackground="#77b8ff")
+        self.left_text.tag_configure(
+            "current_line", background="#e7ff00", selectbackground="#77b8ff"
+        )
+        self.right_text.tag_configure(
+            "current_line", background="#e7ff00", selectbackground="#77b8ff"
+        )
 
         self.left_text.bind("<ButtonRelease-1>", self.highlight_current_line_left)
         self.right_text.bind("<ButtonRelease-1>", self.highlight_current_line_right)
@@ -327,7 +413,9 @@ class SideBySideEditor:
 
         # Путь к файлу метаданных
         base_dir = os.path.dirname(self.orig_path)
-        base_name = os.path.splitext(os.path.splitext(os.path.basename(self.orig_path))[0])[0]
+        base_name = os.path.splitext(
+            os.path.splitext(os.path.basename(self.orig_path))[0]
+        )[0]
         metadata_path = os.path.join(base_dir, f"{base_name}.bnf")
 
         description_text = ""
@@ -335,7 +423,7 @@ class SideBySideEditor:
         # Загрузка существующих данных, если файл существует
         if os.path.exists(metadata_path):
             try:
-                with open(metadata_path, 'r', encoding='utf-8') as f:
+                with open(metadata_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     title_var.set(data.get("title", ""))
                     author_var.set(data.get("author", ""))
@@ -347,7 +435,7 @@ class SideBySideEditor:
         else:
             # Парсинг из имени файла, если файл метаданных не найден
             filename = os.path.basename(base_name)
-            match = re.match(r'^(.*?)(?:\[(.*?)\])?$', filename)
+            match = re.match(r"^(.*?)(?:\[(.*?)\])?$", filename)
             if match:
                 title_var.set(match.group(1).strip())
                 if match.group(2):
@@ -355,29 +443,44 @@ class SideBySideEditor:
 
         # Заголовки и поля ввода
         row = 0
-        ttk.Label(main_frame, text="Название:", font=("Arial", 10, "bold")).grid(row=row, column=0, sticky="w", pady=5)
+        ttk.Label(main_frame, text="Название:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="w", pady=5
+        )
         title_entry = ttk.Entry(main_frame, textvariable=title_var, width=50)
         title_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
-        ttk.Label(main_frame, text="Автор:", font=("Arial", 10, "bold")).grid(row=row, column=0, sticky="w", pady=5)
+        ttk.Label(main_frame, text="Автор:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="w", pady=5
+        )
         author_entry = ttk.Entry(main_frame, textvariable=author_var, width=50)
         author_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
-        ttk.Label(main_frame, text="Язык:", font=("Arial", 10, "bold")).grid(row=row, column=0, sticky="w", pady=5)
-        lang_entry = ttk.Entry(main_frame, textvariable=lang_var, width=50)
+        ttk.Label(main_frame, text="Язык:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="w", pady=5
+        )
+        lang_entry = ttk.Combobox(
+            main_frame,
+            textvariable=lang_var,
+            values=("ru", "en-ru"),
+            state="readonly",
+            width=50,
+        )
         lang_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
-        ttk.Label(main_frame, text="Теги (через запятую):", font=("Arial", 10, "bold")).grid(row=row, column=0,
-                                                                                             sticky="w", pady=5)
+        ttk.Label(
+            main_frame, text="Теги (через запятую):", font=("Arial", 10, "bold")
+        ).grid(row=row, column=0, sticky="w", pady=5)
         tags_entry = ttk.Entry(main_frame, textvariable=tags_var, width=50)
         tags_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
         # Поле для описания с переносом строк
-        ttk.Label(main_frame, text="Описание:", font=("Arial", 10, "bold")).grid(row=row, column=0, sticky="nw", pady=5)
+        ttk.Label(main_frame, text="Описание:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="nw", pady=5
+        )
         desc_frame = ttk.Frame(main_frame)
         desc_frame.grid(row=row, column=1, sticky="nsew", padx=5, pady=5)
 
@@ -398,21 +501,40 @@ class SideBySideEditor:
         buttons_frame = ttk.Frame(dialog)
         buttons_frame.pack(side=tk.BOTTOM, pady=10)
 
-        save_button = ttk.Button(buttons_frame, text="Сохранить",
-                                 command=lambda: self.save_metadata(dialog, metadata_path, title_var, author_var,
-                                                                    lang_var, tags_var, desc_text))
+        save_button = ttk.Button(
+            buttons_frame,
+            text="Сохранить",
+            command=lambda: self.save_metadata(
+                dialog,
+                metadata_path,
+                title_var,
+                author_var,
+                lang_var,
+                tags_var,
+                desc_text,
+            ),
+        )
         save_button.pack(side=tk.LEFT, padx=5)
 
         cancel_button = ttk.Button(buttons_frame, text="Отмена", command=dialog.destroy)
         cancel_button.pack(side=tk.LEFT, padx=5)
 
-    def save_metadata(self, dialog, metadata_path, title_var, author_var, lang_var, tags_var, desc_text):
+    def save_metadata(
+        self,
+        dialog,
+        metadata_path,
+        title_var,
+        author_var,
+        lang_var,
+        tags_var,
+        desc_text,
+    ):
         data = {
             "title": title_var.get(),
             "author": author_var.get(),
             "lang": lang_var.get(),
             "tags": [tag.strip() for tag in tags_var.get().split(",") if tag.strip()],
-             "description": desc_text.get('1.0', 'end-1c')
+            "description": desc_text.get("1.0", "end-1c"),
         }
 
         with open(metadata_path, "w", encoding="utf-8") as f:
@@ -442,13 +564,12 @@ class SideBySideEditor:
         search_win.attributes("-topmost", True)
 
         # Список вариантов
-        options = [
-            ".+\\n.+",
-            "\\n\\n\\n"
-        ]
+        options = [".+\\n.+", "\\n\\n\\n"]
 
         tk.Label(search_win, text="Найти:").pack(side=tk.LEFT, padx=5, pady=5)
-        search_entry = ttk.Combobox(search_win, values=options, width=30, state="normal")
+        search_entry = ttk.Combobox(
+            search_win, values=options, width=30, state="normal"
+        )
         search_entry.pack(side=tk.LEFT, padx=5, pady=5)
 
         regex_var = tk.BooleanVar()
@@ -456,7 +577,9 @@ class SideBySideEditor:
         regex_check.pack(side=tk.LEFT, padx=5, pady=5)
 
         select_all_var = tk.BooleanVar()
-        select_all_check = tk.Checkbutton(search_win, text="Select All", variable=select_all_var)
+        select_all_check = tk.Checkbutton(
+            search_win, text="Select All", variable=select_all_var
+        )
         select_all_check.pack(side=tk.LEFT, padx=5, pady=5)
 
         self.search_started = False
@@ -466,7 +589,9 @@ class SideBySideEditor:
             term = search_entry.get()
             if not term or not self.search_target_widget:
                 return
-            self.find_all_matches(self.search_target_widget, term, regex_var.get(), select_all_var.get())
+            self.find_all_matches(
+                self.search_target_widget, term, regex_var.get(), select_all_var.get()
+            )
             self.goto_next_match()
 
         def next_match():
@@ -478,11 +603,21 @@ class SideBySideEditor:
         def prev_match():
             self.goto_prev_match()
 
-        tk.Button(search_win, text="🔎", command=start_search, font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
-        tk.Button(search_win, text="⬆️", command=prev_match, font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
-        tk.Button(search_win, text="⬇️", command=next_match, font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
-        tk.Button(search_win, text="❌", command=lambda: self.close_search(search_win),
-                  font=("Noto Color Emoji", 10)).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            search_win, text="🔎", command=start_search, font=("Noto Color Emoji", 10)
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            search_win, text="⬆️", command=prev_match, font=("Noto Color Emoji", 10)
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            search_win, text="⬇️", command=next_match, font=("Noto Color Emoji", 10)
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            search_win,
+            text="❌",
+            command=lambda: self.close_search(search_win),
+            font=("Noto Color Emoji", 10),
+        ).pack(side=tk.LEFT, padx=2)
 
         search_entry.bind("<Return>", lambda e: start_search())
         search_win.bind("<Escape>", lambda e: self.close_search(search_win))
@@ -522,7 +657,6 @@ class SideBySideEditor:
             config = json.load(f)
         return config.get("simple", {}), config.get("regex", {})
 
-
     def fix_line_start_spaces(self, content: str) -> str:
         new_lines = []
         for line in content.splitlines():
@@ -539,7 +673,6 @@ class SideBySideEditor:
                 new_lines.append(line)
         return "\n".join(new_lines)
 
-
     def normalize_text(self, content: str, simple_repl: dict, regex_repl: dict) -> str:
         # Простые замены
         for old, new in simple_repl.items():
@@ -550,10 +683,10 @@ class SideBySideEditor:
             content = re.sub(pattern, repl, content, flags=re.MULTILINE)
 
         # Убираем пробелы перед \n
-        content = re.sub(r' \n', '\n', content)
-        content = re.sub(r'\n #', '\n#', content)
-        content = re.sub(r'\n %', '\n%', content)
-        content = re.sub(r'\n\n%', '\n%', content)
+        content = re.sub(r" \n", "\n", content)
+        content = re.sub(r"\n #", "\n#", content)
+        content = re.sub(r"\n %", "\n%", content)
+        content = re.sub(r"\n\n%", "\n%", content)
 
         # Гарантируем ровно один пробел в начале строки
         content = self.fix_line_start_spaces(content)
@@ -590,7 +723,9 @@ class SideBySideEditor:
         else:
             start_pos = "1.0"
             while True:
-                start_pos = widget.search(term, start_pos, nocase=True, stopindex=tk.END)
+                start_pos = widget.search(
+                    term, start_pos, nocase=True, stopindex=tk.END
+                )
                 if not start_pos:
                     break
                 end_pos = f"{start_pos}+{len(term)}c"
@@ -601,7 +736,9 @@ class SideBySideEditor:
                 self.search_matches.append([start_pos, end_pos])
                 start_pos = end_pos
 
-        widget.tag_config("search_highlight_all", background="#7CFC00", foreground="black")
+        widget.tag_config(
+            "search_highlight_all", background="#7CFC00", foreground="black"
+        )
         widget.tag_config("search_highlight", background="green", foreground="black")
 
     def goto_next_match(self):
@@ -729,9 +866,9 @@ class SideBySideEditor:
             left_scroll_pos = self.left_text.yview()[0]
             right_scroll_pos = self.right_text.yview()[0]
 
-            with open(self.orig_path, 'r', encoding='utf-8') as f:
+            with open(self.orig_path, "r", encoding="utf-8") as f:
                 original_lines = f.read()
-            with open(self.trans_path, 'r', encoding='utf-8') as f:
+            with open(self.trans_path, "r", encoding="utf-8") as f:
                 translation_lines = f.read()
 
             self.left_text.delete("1.0", tk.END)
@@ -758,7 +895,9 @@ class SideBySideEditor:
             show_dialog("Ошибка загрузки", str(e))
 
     def load_md_pair_dialog(self):
-        file_path = filedialog.askopenfilename(title="Выбери .en.md или .ru.md", filetypes=[("Markdown", "*.md")])
+        file_path = filedialog.askopenfilename(
+            title="Выбери .en.md или .ru.md", filetypes=[("Markdown", "*.md")]
+        )
         if not file_path:
             return
         self.load_md_pair(file_path)
@@ -790,9 +929,9 @@ class SideBySideEditor:
             self.trans_path = orig_path
 
         try:
-            with open(self.orig_path, 'r', encoding='utf-8') as f:
+            with open(self.orig_path, "r", encoding="utf-8") as f:
                 original_lines = f.read()
-            with open(self.trans_path, 'r', encoding='utf-8') as f:
+            with open(self.trans_path, "r", encoding="utf-8") as f:
                 translation_lines = f.read()
 
             self.left_text.delete("1.0", tk.END)
@@ -843,7 +982,7 @@ class SideBySideEditor:
         try:
             # Получаем номер текущей строки в левом поле
             index = self.left_text.index("insert")
-            line_num = index.split('.')[0]
+            line_num = index.split(".")[0]
 
             # Устанавливаем курсор в правом поле на ту же строку
             self.right_text.mark_set("insert", f"{line_num}.0")
@@ -860,7 +999,7 @@ class SideBySideEditor:
         try:
             # Получаем номер текущей строки в правом поле
             index = self.right_text.index("insert")
-            line_num = index.split('.')[0]
+            line_num = index.split(".")[0]
 
             # Устанавливаем курсор в левом поле на ту же строку
             self.left_text.mark_set("insert", f"{line_num}.0")
@@ -924,13 +1063,17 @@ class SideBySideEditor:
 
         # Определяем базовый путь
         base_dir = os.path.dirname(self.orig_path)
-        base_name = os.path.splitext(os.path.splitext(os.path.basename(self.orig_path))[0])[0]
+        base_name = os.path.splitext(
+            os.path.splitext(os.path.basename(self.orig_path))[0]
+        )[0]
 
         # ---- EPUB ----
         if book_type.startswith("epub"):
             html_content = ""
             if "table" in book_type:
-                html_content += "<table border='1' style='width:100%; border-collapse:collapse;'>"
+                html_content += (
+                    "<table border='1' style='width:100%; border-collapse:collapse;'>"
+                )
                 for o, t in zip(original_lines, translated_lines):
                     if not (o.strip() == "" and t.strip() == ""):
                         html_content += f"<tr><td>{o}</td><td>{t}</td></tr>"
@@ -943,13 +1086,13 @@ class SideBySideEditor:
             book = epub.EpubBook()
             book.set_identifier("id123456")
             book.set_title(base_name)
-            book.set_language('en')
-            c1 = epub.EpubHtml(title='Content', file_name='content.xhtml', lang='en')
+            book.set_language("en")
+            c1 = epub.EpubHtml(title="Content", file_name="content.xhtml", lang="en")
             c1.content = html_content
             book.add_item(c1)
             book.add_item(epub.EpubNcx())
             book.add_item(epub.EpubNav())
-            book.spine = ['nav', c1]
+            book.spine = ["nav", c1]
 
             save_path = os.path.join(base_dir, f"{base_name}.epub")
             epub.write_epub(save_path, book)
@@ -971,9 +1114,24 @@ class SideBySideEditor:
             pdfmetrics.registerFont(TTFont("DejaVu-Bold", bold_font_path))
 
             styles = getSampleStyleSheet()
-            styles.add(ParagraphStyle(name="Cyrillic", fontName="DejaVu", fontSize=10, leading=12, wordWrap='CJK'))
             styles.add(
-                ParagraphStyle(name="CyrillicBold", fontName="DejaVu-Bold", fontSize=10, leading=12, wordWrap='CJK'))
+                ParagraphStyle(
+                    name="Cyrillic",
+                    fontName="DejaVu",
+                    fontSize=10,
+                    leading=12,
+                    wordWrap="CJK",
+                )
+            )
+            styles.add(
+                ParagraphStyle(
+                    name="CyrillicBold",
+                    fontName="DejaVu-Bold",
+                    fontSize=10,
+                    leading=12,
+                    wordWrap="CJK",
+                )
+            )
 
             save_path = os.path.join(base_dir, f"{base_name}.pdf")
 
@@ -983,7 +1141,7 @@ class SideBySideEditor:
                 leftMargin=0,
                 rightMargin=0,
                 topMargin=0,
-                bottomMargin=0
+                bottomMargin=0,
             )
             elements = []
 
@@ -991,23 +1149,34 @@ class SideBySideEditor:
                 data = [["Original", "Translation"]]
                 for o, t in zip(original_lines, translated_lines):
                     if not (o.strip() == "" and t.strip() == ""):
-                        data.append([Paragraph(o, styles["Cyrillic"]), Paragraph(t, styles["Cyrillic"])])
+                        data.append(
+                            [
+                                Paragraph(o, styles["Cyrillic"]),
+                                Paragraph(t, styles["Cyrillic"]),
+                            ]
+                        )
 
                 table = Table(data, colWidths=[270, 270])
-                table.setStyle(TableStyle([
-                    ('FONTNAME', (0, 0), (-1, -1), 'DejaVu'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                ]))
+                table.setStyle(
+                    TableStyle(
+                        [
+                            ("FONTNAME", (0, 0), (-1, -1), "DejaVu"),
+                            ("FONTSIZE", (0, 0), (-1, -1), 9),
+                            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                        ]
+                    )
+                )
                 elements.append(table)
             else:
                 for o, t in zip(original_lines, translated_lines):
                     if not (o.strip() == "" and t.strip() == ""):
-                        elements.append(Paragraph(o, styles["CyrillicBold"]))  # оригинал жирным
+                        elements.append(
+                            Paragraph(o, styles["CyrillicBold"])
+                        )  # оригинал жирным
                         elements.append(Paragraph(t, styles["Cyrillic"]))
                         elements.append(Spacer(1, 6))
 
@@ -1029,11 +1198,11 @@ class SideBySideEditor:
             original_text += [""] * (max_len - len(original_text))
             translated_text += [""] * (max_len - len(translated_text))
 
-            with open(self.orig_path, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(original_text) + '\n')
+            with open(self.orig_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(original_text) + "\n")
 
-            with open(self.trans_path, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(translated_text) + '\n')
+            with open(self.trans_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(translated_text) + "\n")
 
             show_dialog("Успех", "Файлы сохранены.")
 
@@ -1042,10 +1211,20 @@ class SideBySideEditor:
 
     def highlight_current_line_left(self, event=None):
         # даём курсору переместиться, затем подсвечиваем
-        self.root.after(1, lambda: self._highlight_line_with_sync(self.left_text, self.right_text, TextFieldType.LEFT))
+        self.root.after(
+            1,
+            lambda: self._highlight_line_with_sync(
+                self.left_text, self.right_text, TextFieldType.LEFT
+            ),
+        )
 
     def highlight_current_line_right(self, event=None):
-        self.root.after(1, lambda: self._highlight_line_with_sync(self.right_text, self.left_text, TextFieldType.RIGHT))
+        self.root.after(
+            1,
+            lambda: self._highlight_line_with_sync(
+                self.right_text, self.left_text, TextFieldType.RIGHT
+            ),
+        )
 
     def _highlight_line_with_sync(self, src_text, dst_text, field_type):
         self._highlight_line(src_text)
