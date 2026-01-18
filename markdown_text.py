@@ -20,7 +20,9 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-4>", lambda e: self.format_line("h4"))
         self.bind("<Control-Key-5>", lambda e: self.format_line("h5"))
 
-        # self.bind_all("<KeyRelease>", lambda e: self.highlight_markdown())
+        self.bind("<<Modified>>", self._on_text_modified)
+        self.edit_modified(False)
+
         self.bind("<<Paste>>", lambda e: self.highlight_markdown())
         self.bind("<<Cut>>", lambda e: self.highlight_markdown())
 
@@ -99,15 +101,24 @@ class MarkdownText(tk.Text):
         self.highlight_pattern(r"`(.+?)`", "code")
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link")
 
-        # if hasattr(self.master.master, "left_toc") and self.master.master.left_toc.text_widget == self:
-        #     self.master.master.left_toc.update_toc()
-        # if hasattr(self.master.master, "right_toc") and self.master.master.right_toc.text_widget == self:
-        #     self.master.master.right_toc.update_toc()
+    def _on_text_modified(self, event=None):
+        if not self.edit_modified():
+            return
 
-    def highlight_line(self, text, line_number):
+        self.edit_modified(False)
+
+        line = int(self.index("insert").split(".")[0])
+        last = int(self.index("end-1c").split(".")[0])
+
+        for ln in (line - 1, line, line + 1):
+            if 1 <= ln <= last:
+                self.highlight_line(ln)
+
+    def highlight_line(self, line_number):
         # Обрабатываем построчно для многострочных паттернов
         line_start = f"{line_number}.0"
         line_end = f"{line_number}.end"
+        text = self.get(line_start, line_end)
 
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
@@ -274,8 +285,3 @@ class MarkdownText(tk.Text):
 
         self.delete(line_start, line_end)
         self.insert(line_start, text)
-        line_number = int(line_num)
-        if line_number != 0:
-            self.highlight_line(text, line_number - 1)
-        self.highlight_line(text, int(line_num))
-        self.highlight_line(text, int(line_num) + 1)

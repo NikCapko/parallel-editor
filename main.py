@@ -571,6 +571,7 @@ class SideBySideEditor:
         search_entry = ttk.Combobox(
             search_win, values=options, width=30, state="normal"
         )
+        search_entry.focus_set()
         search_entry.pack(side=tk.LEFT, padx=5, pady=5)
 
         regex_var = tk.BooleanVar()
