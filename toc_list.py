@@ -14,13 +14,27 @@ class TOCList(tk.Listbox):
         self.bind("<ButtonRelease-1>", self.on_select)
 
         # Словарь для хранения соответствия "заголовок" -> "номер строки"
+        self.headers_indexes_map = {}
         self.headers_map = {}
+        self._update_job = None
+
+    def check_contains_text(self, text):
+        for i in self.headers_map:
+            if text in self.headers_map[i]:
+                return True
+        return False
 
     def set_text_widget(self, widget):
         self.text_widget = widget
 
+    def schedule_update(self):
+        if self._update_job:
+            self.after_cancel(self._update_job)
+        self._update_job = self.after(300, self.update_toc)
+
     def update_toc(self):
         self.delete(0, tk.END)
+        self.headers_indexes_map.clear()  # Очищаем старую карту
         self.headers_map.clear()  # Очищаем старую карту
 
         if not self.text_widget:
@@ -33,25 +47,30 @@ class TOCList(tk.Listbox):
             if line.startswith("# "):
                 title = line[2:]
                 self.insert(tk.END, f"{title}")
-                self.headers_map[self.size() - 1] = i
+                self.headers_indexes_map[self.size() - 1] = i
+                self.headers_map[self.size() - 1] = title
             elif line.startswith("## "):
                 title = line[3:]
                 self.insert(tk.END, f"  {title}")
-                self.headers_map[self.size() - 1] = i
+                self.headers_indexes_map[self.size() - 1] = i
+                self.headers_map[self.size() - 1] = title
             elif line.startswith("### "):
                 title = line[4:]
                 self.insert(tk.END, f"    {title}")
-                self.headers_map[self.size() - 1] = i
+                self.headers_indexes_map[self.size() - 1] = i
+                self.headers_map[self.size() - 1] = title
             elif line.startswith("#### "):
                 title = line[5:]
                 self.insert(tk.END, f"      {title}")
-                self.headers_map[self.size() - 1] = i
+                self.headers_indexes_map[self.size() - 1] = i
+                self.headers_map[self.size() - 1] = title
             elif line.startswith("##### "):
                 title = line[6:]
                 self.insert(tk.END, f"        {title}")
-                self.headers_map[self.size() - 1] = i
+                self.headers_indexes_map[self.size() - 1] = i
+                self.headers_map[self.size() - 1] = title
 
-    def on_select(self, event=None):
+    def on_select(self, *args):
         if not self.text_widget:
             return
 
@@ -61,7 +80,7 @@ class TOCList(tk.Listbox):
 
         # Получаем номер строки из сохранённой карты
         listbox_index = selection[0]
-        text_line_number = self.headers_map.get(listbox_index)
+        text_line_number = self.headers_indexes_map.get(listbox_index)
 
         if text_line_number is not None:
             # Переходим к нужной строке

@@ -399,11 +399,21 @@ class SideBySideEditor:
 
     def _on_righ_text_modified(self, *args):
         self.right_text._on_text_modified()
-        self.right_toc.update_toc()
+        line = int(self.right_text.index("insert").split(".")[0])
+        text = self.right_text.get(f"{line}.0", f"{line}.end").lstrip()
+        if text.startswith("#"):
+            self.right_toc.schedule_update()
+        elif self.right_toc.check_contains_text(text):
+            self.right_toc.schedule_update()
 
     def _on_left_text_modified(self, *args):
         self.left_text._on_text_modified()
-        self.left_toc.update_toc()
+        line = int(self.left_text.index("insert").split(".")[0])
+        text = self.left_text.get(f"{line}.0", f"{line}.end").lstrip()
+        if text.startswith("#"):
+            self.left_toc.schedule_update()
+        elif self.left_toc.check_contains_text(text):
+            self.left_toc.schedule_update()
 
     def open_metadata_dialog(self):
         if not self.orig_path:
