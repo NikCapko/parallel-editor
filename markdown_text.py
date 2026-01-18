@@ -1,6 +1,7 @@
 import re
 import tkinter as tk
 
+
 class MarkdownText(tk.Text):
     """Кастомный Text виджет с подсветкой Markdown"""
 
@@ -19,7 +20,7 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-4>", lambda e: self.format_line("h4"))
         self.bind("<Control-Key-5>", lambda e: self.format_line("h5"))
 
-        self.bind_all("<KeyRelease>", lambda e: self.highlight_markdown())
+        # self.bind_all("<KeyRelease>", lambda e: self.highlight_markdown())
         self.bind("<<Paste>>", lambda e: self.highlight_markdown())
         self.bind("<<Cut>>", lambda e: self.highlight_markdown())
 
@@ -47,11 +48,24 @@ class MarkdownText(tk.Text):
         """Подсветка Markdown-синтаксиса"""
         # Очистка всех тегов перед повторной обработкой
         for tag in self.tag_names():
-            if tag in ("info", "h1", "h2", "h3", "h4", "h5", "bold", "italic", "bold_italic", "code", "link", "list"):
+            if tag in (
+                "info",
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "bold",
+                "italic",
+                "bold_italic",
+                "code",
+                "link",
+                "list",
+            ):
                 self.tag_remove(tag, "1.0", tk.END)
 
         text = self.get("1.0", tk.END)
-        lines = text.split('\n')
+        lines = text.split("\n")
 
         # Обрабатываем построчно для многострочных паттернов
         for i, line in enumerate(lines, 1):
@@ -79,7 +93,9 @@ class MarkdownText(tk.Text):
         # Обрабатываем встроенные элементы (не зависящие от строк)
         self.highlight_pattern(r"\*\*\*(.+?)\*\*\*", "bold_italic")
         self.highlight_pattern(r"\*\*(.+?)\*\*", "bold", exclude_tags=["bold_italic"])
-        self.highlight_pattern(r"\*(.+?)\*", "italic", exclude_tags=["bold", "bold_italic"])
+        self.highlight_pattern(
+            r"\*(.+?)\*", "italic", exclude_tags=["bold", "bold_italic"]
+        )
         self.highlight_pattern(r"`(.+?)`", "code")
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link")
 
@@ -88,7 +104,76 @@ class MarkdownText(tk.Text):
         # if hasattr(self.master.master, "right_toc") and self.master.master.right_toc.text_widget == self:
         #     self.master.master.right_toc.update_toc()
 
-    def highlight_pattern(self, pattern, tag, start="1.0", end="end", exclude_tags=None):
+    def highlight_line(self, text, line_number):
+        # Обрабатываем построчно для многострочных паттернов
+        line_start = f"{line_number}.0"
+        line_end = f"{line_number}.end"
+
+        # Очистка всех тегов перед повторной обработкой
+        for tag in self.tag_names():
+            if tag in (
+                "info",
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "bold",
+                "italic",
+                "bold_italic",
+                "code",
+                "link",
+                "list",
+            ):
+                self.tag_remove(tag, line_start, line_end)
+
+        # Заголовки
+        if re.match(r"^%\s", text):
+            self.tag_add("info", line_start, line_end)
+        elif re.match(r"^#\s", text):
+            self.tag_add("h1", line_start, line_end)
+        elif re.match(r"^##\s", text):
+            self.tag_add("h2", line_start, line_end)
+        elif re.match(r"^###\s", text):
+            self.tag_add("h3", line_start, line_end)
+        elif re.match(r"^####\s", text):
+            self.tag_add("h4", line_start, line_end)
+        elif re.match(r"^#####\s", text):
+            self.tag_add("h5", line_start, line_end)
+
+        # Списки
+        if re.match(r"^[\*\-\+]\s", text):
+            self.tag_add("list", line_start, line_end)
+
+        # Обрабатываем встроенные элементы (не зависящие от строк)
+        self.highlight_pattern(
+            r"\*\*\*(.+?)\*\*\*", "bold_italic", line_start, line_end
+        )
+        self.highlight_pattern(
+            r"\*\*(.+?)\*\*",
+            "bold",
+            line_start,
+            line_end,
+            exclude_tags=["bold_italic"],
+        )
+        self.highlight_pattern(
+            r"\*(.+?)\*",
+            "italic",
+            line_start,
+            line_end,
+            exclude_tags=["bold", "bold_italic"],
+        )
+        self.highlight_pattern(r"`(.+?)`", "code", line_start, line_end)
+        self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link", line_start, line_end)
+
+        # if hasattr(self.master.master, "left_toc") and self.master.master.left_toc.text_widget == self:
+        #     self.master.master.left_toc.update_toc()
+        # if hasattr(self.master.master, "right_toc") and self.master.master.right_toc.text_widget == self:
+        #     self.master.master.right_toc.update_toc()
+
+    def highlight_pattern(
+        self, pattern, tag, start="1.0", end="end", exclude_tags=None
+    ):
         """Подсветка без перекрытия с другими тегами"""
         if exclude_tags is None:
             exclude_tags = []
@@ -122,7 +207,9 @@ class MarkdownText(tk.Text):
                 if self.tag_ranges(t):  # Есть ли теги вообще
                     ranges = self.tag_ranges(t)
                     for i in range(0, len(ranges), 2):
-                        if self.compare(match_start, ">=", ranges[i]) and self.compare(match_start, "<", ranges[i + 1]):
+                        if self.compare(match_start, ">=", ranges[i]) and self.compare(
+                            match_start, "<", ranges[i + 1]
+                        ):
                             overlap = True
                             break
                 if overlap:
@@ -136,7 +223,7 @@ class MarkdownText(tk.Text):
     def format_line(self, style):
         """Применяет форматирование к строке с курсором"""
         index = self.index("insert")
-        line_num = index.split('.')[0]
+        line_num = index.split(".")[0]
         line_start = f"{line_num}.0"
         line_end = f"{line_num}.end"
 
@@ -187,4 +274,8 @@ class MarkdownText(tk.Text):
 
         self.delete(line_start, line_end)
         self.insert(line_start, text)
-        self.highlight_markdown()
+        line_number = int(line_num)
+        if line_number != 0:
+            self.highlight_line(text, line_number - 1)
+        self.highlight_line(text, int(line_num))
+        self.highlight_line(text, int(line_num) + 1)
