@@ -23,8 +23,14 @@ class MarkdownText(tk.Text):
         # self.bind("<<Modified>>", self._on_text_modified)
         # self.edit_modified(False)
 
-        self.bind("<<Paste>>", lambda e: self.highlight_markdown())
-        self.bind("<<Cut>>", lambda e: self.highlight_markdown())
+        self.bind("<<Paste>>", lambda e: self.schedule_highlight_markdown())
+        self.bind("<<Cut>>", lambda e: self.schedule_highlight_markdown())
+        self._update_job = None
+
+    def schedule_highlight_markdown(self):
+        if self._update_job:
+            self.after_cancel(self._update_job)
+        self._update_job = self.after(300, self.highlight_markdown)
 
     def configure_tags(self):
         """Настройка стилей для Markdown-элементов"""
