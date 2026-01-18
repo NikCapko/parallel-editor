@@ -19,10 +19,7 @@ class TOCList(tk.Listbox):
         self._update_job = None
 
     def check_contains_text(self, text):
-        for i in self.headers_map:
-            if text in self.headers_map[i]:
-                return True
-        return False
+        return any(text in str(value) for value in self.headers_map.values())
 
     def set_text_widget(self, widget):
         self.text_widget = widget
