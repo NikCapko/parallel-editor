@@ -1,10 +1,15 @@
 import tkinter as tk
 
+from markdown_text import MarkdownText
+
 
 class TOCList(tk.Listbox):
-    def __init__(self, parent, text_widget=None, *args, **kwargs):
+    def __init__(
+        self, parent, text_widget: MarkdownText | None = None, *args, **kwargs
+    ):
         super().__init__(parent, *args, **kwargs)
         self.text_widget = text_widget
+
         self.configure(width=25, activestyle="none")
         self.bind("<ButtonRelease-1>", self.on_select)
 

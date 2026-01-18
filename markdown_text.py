@@ -20,8 +20,8 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-4>", lambda e: self.format_line("h4"))
         self.bind("<Control-Key-5>", lambda e: self.format_line("h5"))
 
-        self.bind("<<Modified>>", self._on_text_modified)
-        self.edit_modified(False)
+        # self.bind("<<Modified>>", self._on_text_modified)
+        # self.edit_modified(False)
 
         self.bind("<<Paste>>", lambda e: self.highlight_markdown())
         self.bind("<<Cut>>", lambda e: self.highlight_markdown())

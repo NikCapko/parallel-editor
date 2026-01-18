@@ -285,9 +285,15 @@ class SideBySideEditor:
         self.left_frame = tk.Frame(left_editor_frame)
         self.left_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        self.left_text = MarkdownText(self.left_frame, wrap="word")
+        self.left_scroll = tk.Scrollbar(self.left_frame, command=self.on_scroll_left)
+
         # Левый редактор с оглавлением
-        self.left_toc = TOCList(self.left_frame, None)
+        self.left_toc = TOCList(self.left_frame, self.left_text)
         self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
+
+        self.left_text.bind("<<Modified>>", self._on_left_text_modified)
+        self.left_text.edit_modified(False)
 
         # Фрейм для номеров строк + поле перехода
         left_num_frame = tk.Frame(self.left_frame)
@@ -295,11 +301,7 @@ class SideBySideEditor:
 
         self.left_line_numbers = LineNumbers(left_num_frame, width=50)
         self.left_line_numbers.pack(side=tk.TOP, fill=tk.Y, expand=True)
-
-        self.left_text = MarkdownText(self.left_frame, wrap="word")
-        self.left_toc.text_widget = self.left_text
         self.left_line_numbers.attach(self.left_text)
-        self.left_scroll = tk.Scrollbar(self.left_frame, command=self.on_scroll_left)
 
         self.left_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.left_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -340,9 +342,11 @@ class SideBySideEditor:
         self.right_line_numbers.attach(self.right_text)
         self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
 
-        self.right_toc = TOCList(right_frame, None)
+        self.right_toc = TOCList(right_frame, self.right_text)
         self.right_toc.pack(side=tk.RIGHT, fill=tk.Y)
-        self.right_toc.text_widget = self.right_text
+
+        self.right_text.bind("<<Modified>>", self._on_righ_text_modified)
+        self.right_text.edit_modified(False)
 
         self.right_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.right_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -392,6 +396,14 @@ class SideBySideEditor:
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def _on_righ_text_modified(self, *args):
+        self.right_text._on_text_modified()
+        self.right_toc.update_toc()
+
+    def _on_left_text_modified(self, *args):
+        self.left_text._on_text_modified()
+        self.left_toc.update_toc()
 
     def open_metadata_dialog(self):
         if not self.orig_path:
