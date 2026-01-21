@@ -348,6 +348,12 @@ class SideBySideEditor:
         self.right_text.bind("<<Modified>>", self._on_righ_text_modified)
         self.right_text.edit_modified(False)
 
+        self.right_text.bind("<<Paste>>", lambda e: self.update_right_text())
+        self.right_text.bind("<<Cut>>", lambda e: self.update_right_text())
+
+        self.right_text.bind("<<Paste>>", lambda e: self.update_left_text())
+        self.left_text.bind("<<Cut>>", lambda e: self.update_left_text())
+
         self.right_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.right_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -396,6 +402,14 @@ class SideBySideEditor:
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
             self.load_md_pair(file_path)
+
+    def update_right_text(self):
+        self.right_text.schedule_highlight_markdown()
+        self.right_toc.schedule_update()
+
+    def update_left_text(self):
+        self.left_text.schedule_highlight_markdown()
+        self.left_toc.schedule_update()
 
     def _on_righ_text_modified(self, *args):
         self.right_text._on_text_modified()
@@ -543,14 +557,14 @@ class SideBySideEditor:
         cancel_button.pack(side=tk.LEFT, padx=5)
 
     def save_metadata(
-        self,
-        dialog,
-        metadata_path,
-        title_var,
-        author_var,
-        lang_var,
-        tags_var,
-        desc_text,
+            self,
+            dialog,
+            metadata_path,
+            title_var,
+            author_var,
+            lang_var,
+            tags_var,
+            desc_text,
     ):
         data = {
             "title": title_var.get(),
