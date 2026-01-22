@@ -1265,19 +1265,47 @@ class SideBySideEditor:
             show_dialog("Готово", f"PDF сохранён: {save_path}")
 
     def save_md_files(self):
-        if not self.orig_path or not self.trans_path:
-            show_dialog("Ошибка", "Файлы не загружены")
-            return
-
         try:
-            original_text = self.left_text.get("1.0", tk.END).strip().splitlines()
-            translated_text = self.right_text.get("1.0", tk.END).strip().splitlines()
+            # 🔹 ЕСЛИ ФАЙЛЫ ЕЩЁ НЕ СОХРАНЯЛИСЬ
+            if not self.orig_path or not self.trans_path:
+                path = filedialog.asksaveasfilename(
+                    title="Сохранить Markdown файлы",
+                    defaultextension=".md",
+                    filetypes=[("Markdown files", "*.md")],
+                )
 
-            # Выравнивание по строкам
+                if not path:
+                    return  # пользователь отменил
+
+                base, ext = os.path.splitext(path)
+
+                # определяем язык
+                if base.endswith(".en"):
+                    base = base[:-3]
+                    self.orig_path = base + ".en.md"
+                    self.trans_path = base + ".ru.md"
+                elif base.endswith(".ru"):
+                    base = base[:-3]
+                    self.orig_path = base + ".ru.md"
+                    self.trans_path = base + ".en.md"
+                else:
+                    # если пользователь не указал язык — считаем .en основным
+                    self.orig_path = base + ".en.md"
+                    self.trans_path = base + ".ru.md"
+
+            # 🔹 ПОЛУЧАЕМ ТЕКСТ
+            original_text = self.left_text.get("1.0", "end-1c").splitlines()
+            translated_text = self.right_text.get("1.0", "end-1c").splitlines()
+
+            # 🔹 ВЫРАВНИВАНИЕ СТРОК
             max_len = max(len(original_text), len(translated_text))
             original_text += [""] * (max_len - len(original_text))
             translated_text += [""] * (max_len - len(translated_text))
 
+            base_name = os.path.basename(self.orig_path).split(".")[0]
+            self.file_title.config(text=f"{base_name}")
+
+            # 🔹 СОХРАНЕНИЕ
             with open(self.orig_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(original_text) + "\n")
 
