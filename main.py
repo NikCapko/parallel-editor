@@ -1298,9 +1298,9 @@ class SideBySideEditor:
             translated_text = self.right_text.get("1.0", "end-1c").splitlines()
 
             # 🔹 ВЫРАВНИВАНИЕ СТРОК
-            max_len = max(len(original_text), len(translated_text))
-            original_text += [""] * (max_len - len(original_text))
-            translated_text += [""] * (max_len - len(translated_text))
+            # max_len = max(len(original_text), len(translated_text))
+            # original_text += [""] * (max_len - len(original_text))
+            # translated_text += [""] * (max_len - len(translated_text))
 
             base_name = os.path.basename(self.orig_path).split(".")[0]
             self.file_title.config(text=f"{base_name}")
