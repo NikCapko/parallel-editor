@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 import tkinter as tk
-from tkinter import filedialog, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from ebooklib import epub
 from reportlab.lib import colors
@@ -412,6 +412,7 @@ class SideBySideEditor:
 
     def update_left_text_async(self):
         self.left_text.after(300, self.update_left_text)
+
     def update_left_text(self):
         self.left_text.schedule_highlight_markdown()
         self.left_toc.schedule_update()
@@ -562,14 +563,14 @@ class SideBySideEditor:
         cancel_button.pack(side=tk.LEFT, padx=5)
 
     def save_metadata(
-            self,
-            dialog,
-            metadata_path,
-            title_var,
-            author_var,
-            lang_var,
-            tags_var,
-            desc_text,
+        self,
+        dialog,
+        metadata_path,
+        title_var,
+        author_var,
+        lang_var,
+        tags_var,
+        desc_text,
     ):
         data = {
             "title": title_var.get(),
@@ -960,9 +961,23 @@ class SideBySideEditor:
         orig_path = base_name + orig_lang + ".md"
         trans_path = base_name + trans_lang + ".md"
 
+        # 🔹 ЕСЛИ ФАЙЛА ПЕРЕВОДА НЕТ
         if not os.path.exists(trans_path):
-            show_dialog("Ошибка", f"Файл перевода не найден: {trans_path}")
-            return
+            answer = messagebox.askyesno(
+                "Файл не найден",
+                f"Файл перевода не найден:\n{trans_path}\n\nСоздать его?",
+            )
+
+            if not answer:
+                return
+
+            # 🔹 СОЗДАЁМ ФАЙЛ
+            try:
+                with open(trans_path, "w", encoding="utf-8") as f:
+                    f.write("")  # можно добавить шаблон
+            except Exception as e:
+                messagebox.showerror("Ошибка", str(e))
+                return
 
         if lang == ".en":
             self.orig_path = orig_path
