@@ -31,8 +31,8 @@ class TOCList(tk.Listbox):
 
     def update_toc(self):
         self.delete(0, tk.END)
-        self.headers_indexes_map.clear()  # Очищаем старую карту
-        self.headers_map.clear()  # Очищаем старую карту
+        self.headers_indexes_map.clear()
+        self.headers_map.clear()
 
         if not self.text_widget:
             return

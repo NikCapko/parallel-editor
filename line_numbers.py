@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 class LineNumbers(tk.Canvas):
     def __init__(self, parent, *args, **kwargs):
         tk.Canvas.__init__(self, parent, *args, **kwargs)
@@ -26,7 +27,8 @@ class LineNumbers(tk.Canvas):
         i = self.text_widget.index("@0,0")
         while True:
             dline = self.text_widget.dlineinfo(i)
-            if dline is None: break
+            if dline is None:
+                break
             y = dline[1]
             line_num = str(i).split(".")[0]
             self.create_text(45, y, anchor="ne", text=line_num, fill="#666666")

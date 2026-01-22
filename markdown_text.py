@@ -10,6 +10,7 @@ class MarkdownText(tk.Text):
         self.configure(undo=True, maxundo=20)
         self.configure_tags()
         self.configure_bindings()
+        self._update_job = None
 
     def configure_bindings(self):
         self.bind("<Control-b>", lambda e: self.format_line("bold"))
@@ -19,13 +20,6 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-3>", lambda e: self.format_line("h3"))
         self.bind("<Control-Key-4>", lambda e: self.format_line("h4"))
         self.bind("<Control-Key-5>", lambda e: self.format_line("h5"))
-
-        # self.bind("<<Modified>>", self._on_text_modified)
-        # self.edit_modified(False)
-
-        self.bind("<<Paste>>", lambda e: self.schedule_highlight_markdown())
-        self.bind("<<Cut>>", lambda e: self.schedule_highlight_markdown())
-        self._update_job = None
 
     def schedule_highlight_markdown(self):
         if self._update_job:
@@ -107,7 +101,7 @@ class MarkdownText(tk.Text):
         self.highlight_pattern(r"`(.+?)`", "code")
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link")
 
-    def _on_text_modified(self, event=None):
+    def on_text_modified(self, event=None):
         if not self.edit_modified():
             return
 
@@ -116,7 +110,7 @@ class MarkdownText(tk.Text):
         line = int(self.index("insert").split(".")[0])
         last = int(self.index("end-1c").split(".")[0])
 
-        for ln in (line - 1, line, line + 1):
+        for ln in (line - 2, line, line + 2):
             if 1 <= ln <= last:
                 self.highlight_line(ln)
 
@@ -182,11 +176,6 @@ class MarkdownText(tk.Text):
         )
         self.highlight_pattern(r"`(.+?)`", "code", line_start, line_end)
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link", line_start, line_end)
-
-        # if hasattr(self.master.master, "left_toc") and self.master.master.left_toc.text_widget == self:
-        #     self.master.master.left_toc.update_toc()
-        # if hasattr(self.master.master, "right_toc") and self.master.master.right_toc.text_widget == self:
-        #     self.master.master.right_toc.update_toc()
 
     def highlight_pattern(
         self, pattern, tag, start="1.0", end="end", exclude_tags=None

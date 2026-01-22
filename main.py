@@ -2,7 +2,6 @@
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -297,7 +296,7 @@ class SideBySideEditor:
         self.left_toc = TOCList(self.left_frame, self.left_text)
         self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
 
-        self.left_text.bind("<<Modified>>", self._on_left_text_modified)
+        self.left_text.bind("<<Modified>>", self.on_left_text_modified)
         self.left_text.edit_modified(False)
 
         # Фрейм для номеров строк + поле перехода
@@ -350,7 +349,7 @@ class SideBySideEditor:
         self.right_toc = TOCList(right_frame, self.right_text)
         self.right_toc.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.right_text.bind("<<Modified>>", self._on_righ_text_modified)
+        self.right_text.bind("<<Modified>>", self.on_righ_text_modified)
         self.right_text.edit_modified(False)
 
         self.right_text.bind("<<Paste>>", lambda e: self.update_right_text_async())
@@ -422,8 +421,8 @@ class SideBySideEditor:
         self.left_text.schedule_highlight_markdown()
         self.left_toc.schedule_update()
 
-    def _on_righ_text_modified(self, *args):
-        self.right_text._on_text_modified()
+    def on_righ_text_modified(self, *args):
+        self.right_text.on_text_modified()
         line = int(self.right_text.index("insert").split(".")[0])
         text = self.right_text.get(f"{line}.0", f"{line}.end").lstrip()
         if text.startswith("#"):
@@ -431,8 +430,8 @@ class SideBySideEditor:
         elif self.right_toc.check_contains_text(text):
             self.right_toc.schedule_update()
 
-    def _on_left_text_modified(self, *args):
-        self.left_text._on_text_modified()
+    def on_left_text_modified(self, *args):
+        self.left_text.on_text_modified()
         line = int(self.left_text.index("insert").split(".")[0])
         text = self.left_text.get(f"{line}.0", f"{line}.end").lstrip()
         if text.startswith("#"):
@@ -690,8 +689,8 @@ class SideBySideEditor:
     def correct_text(self):
         self.correct_text_frame_content(self.left_text)
         self.correct_text_frame_content(self.right_text)
-        self.left_toc.update_toc()
-        self.right_toc.update_toc()
+        self.left_toc.schedule_update()
+        self.right_toc.schedule_update()
 
     def correct_text_frame_content(self, text_frame):
         text = text_frame.get("1.0", tk.END).strip()
@@ -946,8 +945,8 @@ class SideBySideEditor:
             self.left_text.highlight_markdown()
             self.right_text.highlight_markdown()
 
-            self.left_toc.update_toc()
-            self.right_toc.update_toc()
+            self.left_toc.schedule_update()
+            self.right_toc.schedule_update()
 
             # Восстанавливаем прокрутку
             self.left_text.update_idletasks()  # опционально, но помогает
@@ -1023,8 +1022,8 @@ class SideBySideEditor:
             self.left_text.highlight_markdown()
             self.right_text.highlight_markdown()
 
-            self.left_toc.update_toc()
-            self.right_toc.update_toc()
+            self.left_toc.schedule_update()
+            self.right_toc.schedule_update()
 
             # Обновляем заголовок после загрузки файлов
             self.update_file_title()

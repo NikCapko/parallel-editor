@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 class ToolTip:
     def __init__(self, widget, text):
         self.widget = widget
@@ -24,7 +25,7 @@ class ToolTip:
             relief="solid",
             borderwidth=1,
             padx=5,
-            pady=2
+            pady=2,
         )
         label.pack()
 
