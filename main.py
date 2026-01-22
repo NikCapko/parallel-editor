@@ -2,8 +2,10 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -21,6 +23,9 @@ from toc_list import TOCList
 from tooltip import ToolTip
 
 CONFIG_FILE = "replacements.json"
+
+TEMP_DIR = os.path.join(tempfile.gettempdir(), "paraline_editor")
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 
 class TextFieldType:
@@ -877,22 +882,39 @@ class SideBySideEditor:
         else:
             self.file_title.config(text="Файл не загружен")
 
+    def save_text_to_file(self, text_widget, path):
+        content = text_widget.get("1.0", "end-1c")
+
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+    def create_temp_md_from_text(self, lang):
+        filename = f"temporary.{lang}.md"
+        path = os.path.join(TEMP_DIR, filename)
+
+        content = self.left_text.get("1.0", "end-1c")
+
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return path
+
     def open_original_with_browser(self, app):
         """Открывает оригинальный .en.md файл выбранной программой"""
-        if not self.orig_path:
-            show_dialog("Ошибка", "Оригинальный файл не загружен")
-            return
-
         try:
-            # Определяем путь к английскому файлу
-            en_path = ""
-            if self.orig_path.endswith(".en.md"):
+            en_path = None
+
+            if self.orig_path and self.orig_path.endswith(".en.md"):
                 en_path = self.orig_path
-            elif self.trans_path.endswith(".en.md"):
+            elif self.trans_path and self.trans_path.endswith(".en.md"):
                 en_path = self.trans_path
+
+            # 🔹 ЕСЛИ НЕТ — СОЗДАЁМ ВРЕМЕННЫЙ
+            if not en_path or not os.path.exists(en_path):
+                en_path = self.create_temp_md_from_text("en")
             else:
-                show_dialog("Ошибка", "Английский файл не найден")
-                return
+                # 🔹 обновляем существующий файл перед открытием
+                self.save_text_to_file(self.left_text, en_path)
 
             subprocess.Popen([app, en_path])
 
@@ -1318,7 +1340,19 @@ def show_dialog(title, message, timeout=500):
     dialog.after(ms=timeout, func=dialog.destroy)
 
 
+def clear_temp_dir():
+    if os.path.exists(TEMP_DIR):
+        for name in os.listdir(TEMP_DIR):
+            path = os.path.join(TEMP_DIR, name)
+            try:
+                if os.path.isfile(path):
+                    os.remove(path)
+            except Exception:
+                pass
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = SideBySideEditor(root)
     root.mainloop()
+    clear_temp_dir()
