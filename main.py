@@ -982,24 +982,6 @@ class SideBySideEditor:
         orig_path = base_name + orig_lang + ".md"
         trans_path = base_name + trans_lang + ".md"
 
-        # 🔹 ЕСЛИ ФАЙЛА ПЕРЕВОДА НЕТ
-        if not os.path.exists(trans_path):
-            answer = messagebox.askyesno(
-                "Файл не найден",
-                f"Файл перевода не найден:\n{trans_path}\n\nСоздать его?",
-            )
-
-            if not answer:
-                return
-
-            # 🔹 СОЗДАЁМ ФАЙЛ
-            try:
-                with open(trans_path, "w", encoding="utf-8") as f:
-                    f.write("")  # можно добавить шаблон
-            except Exception as e:
-                messagebox.showerror("Ошибка", str(e))
-                return
-
         if lang == ".en":
             self.orig_path = orig_path
             self.trans_path = trans_path
@@ -1008,10 +990,16 @@ class SideBySideEditor:
             self.trans_path = orig_path
 
         try:
-            with open(self.orig_path, "r", encoding="utf-8") as f:
-                original_lines = f.read()
-            with open(self.trans_path, "r", encoding="utf-8") as f:
-                translation_lines = f.read()
+            if os.path.exists(self.orig_path):
+                with open(self.orig_path, "r", encoding="utf-8") as f:
+                    original_lines = f.read()
+            else:
+                original_lines = ""
+            if os.path.exists(self.trans_path):
+                with open(self.trans_path, "r", encoding="utf-8") as f:
+                    translation_lines = f.read()
+            else:
+                translation_lines = ""
 
             self.left_text.delete("1.0", tk.END)
             self.right_text.delete("1.0", tk.END)
@@ -1030,6 +1018,24 @@ class SideBySideEditor:
 
         except Exception as e:
             show_dialog("Ошибка", str(e))
+
+        # 🔹 ЕСЛИ ФАЙЛА ПЕРЕВОДА НЕТ
+        if not os.path.exists(trans_path):
+            answer = messagebox.askyesno(
+                "Файл не найден",
+                f"Файл перевода не найден:\n{trans_path}\n\nСоздать его?",
+            )
+
+            if not answer:
+                return
+
+            # 🔹 СОЗДАЁМ ФАЙЛ
+            try:
+                with open(trans_path, "w", encoding="utf-8") as f:
+                    f.write("")  # можно добавить шаблон
+            except Exception as e:
+                messagebox.showerror("Ошибка", str(e))
+                return
 
     def edit_translate(self):
         """Открывает файл перевода .ru.md в mousepad"""
