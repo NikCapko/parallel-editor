@@ -10,7 +10,7 @@ class TOCList(tk.Listbox):
         super().__init__(parent, *args, **kwargs)
         self.text_widget = text_widget
 
-        self.configure(width=25, activestyle="none")
+        self.configure(width=25, activestyle="none", exportselection=False)
         self.bind("<ButtonRelease-1>", self.on_select)
 
         # Словарь для хранения соответствия "заголовок" -> "номер строки"
@@ -30,6 +30,14 @@ class TOCList(tk.Listbox):
         self._update_job = self.after(300, self.update_toc)
 
     def update_toc(self):
+        # сохраняем индекс выделенного элемента
+        selected_index = None
+        selection = self.curselection()
+        if selection:
+            selected_index = selection[0]
+
+        scroll_pos = self.yview()[0]
+
         self.delete(0, tk.END)
         self.headers_indexes_map.clear()
         self.headers_map.clear()
@@ -66,6 +74,17 @@ class TOCList(tk.Listbox):
                 self.insert(tk.END, f"        {title}")
                 self.headers_indexes_map[self.size() - 1] = i
                 self.headers_map[self.size() - 1] = title
+
+        # восстанавливаем выделение по индексу
+        if selected_index is not None and selected_index < self.size():
+            self.selection_set(selected_index)
+            self.activate(selected_index)
+
+        # --- восстановить скролл ---
+        self.yview_moveto(scroll_pos)
+
+        if selected_index is not None:
+            self.see(selected_index)
 
     def on_select(self, *args):
         if not self.text_widget:
