@@ -389,33 +389,33 @@ class MarkdownText(tk.Text):
 
         elif style == "h1":
             if text.startswith("# "):
-                text = text[2:]
+                text = text.strip("#").strip()
             else:
-                text = f"# {text}"
+                text = f"# {text.strip('#').strip()}"
 
         elif style == "h2":
             if text.startswith("## "):
-                text = text[3:]
+                text = text.strip("#").strip()
             else:
-                text = f"## {text}"
+                text = f"## {text.strip('#').strip()}"
 
         elif style == "h3":
             if text.startswith("### "):
-                text = text[4:]
+                text = text.strip("#").strip()
             else:
-                text = f"### {text}"
+                text = f"### {text.strip('#').strip()}"
 
         elif style == "h4":
             if text.startswith("#### "):
-                text = text[5:]
+                text = text.strip("#").strip()
             else:
-                text = f"#### {text}"
+                text = f"#### {text.strip('#').strip()}"
 
         elif style == "h5":
             if text.startswith("##### "):
-                text = text[6:]
+                text = text.strip("#").strip()
             else:
-                text = f"##### {text}"
+                text = f"##### {text.strip('#').strip()}"
 
         self.delete(line_start, line_end)
         self.insert(line_start, text)
