@@ -230,7 +230,7 @@ class MarkdownText(tk.Text):
 
         # Обрабатываем встроенные элементы (не зависящие от строк)
         self.highlight_pattern(r"\*\*\*(.+?)\*\*\*", "bold_italic")
-        self.highlight_pattern(r"#([a-zA-Zа-яА-ЯёЁ_]+?\s)", "tag")
+        self.highlight_pattern(r"#([a-zA-Zа-яА-ЯёЁ_-]+?\s)", "tag")
         self.highlight_pattern(r"\*\*(.+?)\*\*", "bold", exclude_tags=["bold_italic"])
         self.highlight_pattern(
             r"\*(.+?)\*", "italic", exclude_tags=["bold", "bold_italic"]
@@ -312,7 +312,7 @@ class MarkdownText(tk.Text):
             line_end,
             exclude_tags=["bold", "bold_italic"],
         )
-        self.highlight_pattern(r"#([a-zA-Zа-яА-ЯёЁ_]+?\s)", "tag")
+        self.highlight_pattern(r"#([a-zA-Zа-яА-ЯёЁ_-]+?\s)", "tag")
         self.highlight_pattern(r"`(.+?)`", "code", line_start, line_end)
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link", line_start, line_end)
 
