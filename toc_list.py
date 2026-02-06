@@ -12,6 +12,7 @@ class TOCList(tk.Listbox):
 
         self.configure(width=25, activestyle="none", exportselection=False)
         self.bind("<ButtonRelease-1>", self.on_select)
+        self.bind("<<ListboxSelect>>", self.on_select)
 
         # Словарь для хранения соответствия "заголовок" -> "номер строки"
         self.headers_indexes_map = {}
@@ -102,3 +103,4 @@ class TOCList(tk.Listbox):
             # Переходим к нужной строке
             self.text_widget.mark_set("insert", f"{text_line_number}.0")
             self.text_widget.see(f"{text_line_number}.0")
+            self.text_widget.focus_set()
