@@ -52,6 +52,16 @@ class MarkdownText(tk.Text):
             ),
             foreground="#4B0082",
         )
+        self.tag_config(
+            "tag",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size") + 1,
+                weight="bold",
+                slant="italic",
+            ),
+            foreground="#3dba0b",
+        )
         # Заголовки
         self.tag_config(
             "h1",
@@ -158,6 +168,7 @@ class MarkdownText(tk.Text):
         for tag in self.tag_names():
             if tag in (
                 "info",
+                "tag",
                 "h1",
                 "h2",
                 "h3",
@@ -200,6 +211,7 @@ class MarkdownText(tk.Text):
 
         # Обрабатываем встроенные элементы (не зависящие от строк)
         self.highlight_pattern(r"\*\*\*(.+?)\*\*\*", "bold_italic")
+        self.highlight_pattern(r"#([a-zA-Zа-яА-ЯёЁ_]+?\s)", "tag")
         self.highlight_pattern(r"\*\*(.+?)\*\*", "bold", exclude_tags=["bold_italic"])
         self.highlight_pattern(
             r"\*(.+?)\*", "italic", exclude_tags=["bold", "bold_italic"]
@@ -230,6 +242,7 @@ class MarkdownText(tk.Text):
         for tag in self.tag_names():
             if tag in (
                 "info",
+                "tag",
                 "h1",
                 "h2",
                 "h3",
@@ -280,6 +293,7 @@ class MarkdownText(tk.Text):
             line_end,
             exclude_tags=["bold", "bold_italic"],
         )
+        self.highlight_pattern(r"#([a-zA-Zа-яА-ЯёЁ_]+?\s)", "tag")
         self.highlight_pattern(r"`(.+?)`", "code", line_start, line_end)
         self.highlight_pattern(r"\[(.+?)\]\((.+?)\)", "link", line_start, line_end)
 
