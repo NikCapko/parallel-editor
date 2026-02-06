@@ -290,12 +290,14 @@ class SideBySideEditor:
         self.left_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.left_text = MarkdownText(self.left_frame, wrap="word")
-        self.left_scroll = tk.Scrollbar(self.left_frame, command=self.on_scroll_left)
+        self.left_scroll = tk.Scrollbar(
+            self.left_frame, command=self.on_scroll_left, width=15
+        )
 
         # Левый редактор с оглавлением
         self.left_toc = TOCList(self.left_frame, self.left_text)
         self.left_toc_scroll = tk.Scrollbar(
-            self.left_frame, orient=tk.VERTICAL, command=self.left_toc.yview
+            self.left_frame, orient=tk.VERTICAL, command=self.left_toc.yview, width=15
         )
         self.left_toc.configure(yscrollcommand=self.left_toc_scroll.set)
         self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
@@ -349,11 +351,13 @@ class SideBySideEditor:
 
         self.right_text = MarkdownText(right_frame, wrap="word")
         self.right_line_numbers.attach(self.right_text)
-        self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
+        self.right_scroll = tk.Scrollbar(
+            right_frame, command=self.on_scroll_right, width=15
+        )
 
         self.right_toc = TOCList(right_frame, self.right_text)
         self.right_toc_scroll = tk.Scrollbar(
-            right_frame, orient=tk.VERTICAL, command=self.right_toc.yview
+            right_frame, orient=tk.VERTICAL, command=self.right_toc.yview, width=15
         )
         self.right_toc.configure(yscrollcommand=self.right_toc_scroll.set)
         self.right_toc_scroll.pack(side=tk.RIGHT, fill=tk.Y)
