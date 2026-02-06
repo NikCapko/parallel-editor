@@ -29,6 +29,25 @@ class MarkdownText(tk.Text):
         self.bind("<Control-minus>", lambda e: self.zoom(-1))
         self.bind("<Control-0>", lambda e: self.base_font.configure(size=12))
 
+        self.bind("<Control-BackSpace>", self.delete_word_left)
+        self.bind("<Control-Delete>", self.delete_word_right)
+
+    def delete_word_left(self, event):
+        index = self.index("insert")
+        prev_index = self.search(r"\W", index, backwards=True, regexp=True)
+        if not prev_index:
+            prev_index = "1.0"
+        self.delete(prev_index, index)
+        return "break"
+
+    def delete_word_right(self, event):
+        index = self.index("insert")
+        next_index = self.search(r"\W", index, regexp=True)
+        if not next_index:
+            next_index = tk.END
+        self.delete(index, next_index)
+        return "break"
+
     def zoom(self, delta):
         size = self.base_font.actual("size") + delta
         if size >= 8:
