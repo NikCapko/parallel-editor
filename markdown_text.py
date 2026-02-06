@@ -2,6 +2,10 @@ import re
 import tkinter as tk
 from tkinter import font
 
+WORD_CHARS = r"[A-Za-zА-Яа-яЁё0-9_-]"
+SPACE_CHARS = r"\s"
+PUNCT_CHARS = r"[^\w\s]"
+
 
 class MarkdownText(tk.Text):
     """Кастомный Text виджет с подсветкой Markdown"""
@@ -34,18 +38,50 @@ class MarkdownText(tk.Text):
 
     def delete_word_left(self, event):
         index = self.index("insert")
-        prev_index = self.search(r"\W", index, backwards=True, regexp=True)
-        if not prev_index:
-            prev_index = "1.0"
-        self.delete(prev_index, index)
+
+        # 1. пробелы
+        i = self.search(r"\S", index, backwards=True, regexp=True)
+        if not i:
+            self.delete("1.0", index)
+            return "break"
+
+        # 2. слово
+        if self.get(i).isalnum() or self.get(i) in "_-":
+            j = self.search(
+                PUNCT_CHARS + "|" + SPACE_CHARS, i, backwards=True, regexp=True
+            )
+            j = self.index(f"{j} +1c") if j else "1.0"
+        else:
+            # 3. пунктуация
+            j = self.search(
+                WORD_CHARS + "|" + SPACE_CHARS, i, backwards=True, regexp=True
+            )
+            j = self.index(f"{j} +1c") if j else "1.0"
+
+        self.delete(j, index)
         return "break"
 
     def delete_word_right(self, event):
         index = self.index("insert")
-        next_index = self.search(r"\W", index, regexp=True)
-        if not next_index:
-            next_index = tk.END
-        self.delete(index, next_index)
+
+        # 1. пробелы
+        i = self.search(r"\S", index, regexp=True)
+        if not i:
+            self.delete(index, tk.END)
+            return "break"
+
+        ch = self.get(i)
+
+        # 2. слово
+        if ch.isalnum() or ch in "_-":
+            j = self.search(PUNCT_CHARS + "|" + SPACE_CHARS, i, regexp=True)
+            j = j if j else tk.END
+        else:
+            # 3. пунктуация
+            j = self.search(WORD_CHARS + "|" + SPACE_CHARS, i, regexp=True)
+            j = j if j else tk.END
+
+        self.delete(index, j)
         return "break"
 
     def zoom(self, delta):
