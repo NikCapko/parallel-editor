@@ -294,7 +294,12 @@ class SideBySideEditor:
 
         # Левый редактор с оглавлением
         self.left_toc = TOCList(self.left_frame, self.left_text)
+        self.left_toc_scroll = tk.Scrollbar(
+            self.left_frame, orient=tk.VERTICAL, command=self.left_toc.yview
+        )
+        self.left_toc.configure(yscrollcommand=self.left_toc_scroll.set)
         self.left_toc.pack(side=tk.LEFT, fill=tk.Y)
+        self.left_toc_scroll.pack(side=tk.LEFT, fill=tk.Y)
 
         self.left_text.bind("<<Modified>>", self.on_left_text_modified)
         self.left_text.edit_modified(False)
@@ -347,6 +352,11 @@ class SideBySideEditor:
         self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
 
         self.right_toc = TOCList(right_frame, self.right_text)
+        self.right_toc_scroll = tk.Scrollbar(
+            right_frame, orient=tk.VERTICAL, command=self.right_toc.yview
+        )
+        self.right_toc.configure(yscrollcommand=self.right_toc_scroll.set)
+        self.right_toc_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.right_toc.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.right_text.bind("<<Modified>>", self.on_righ_text_modified)
