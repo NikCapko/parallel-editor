@@ -1,5 +1,6 @@
 import re
 import tkinter as tk
+from tkinter import font
 
 
 class MarkdownText(tk.Text):
@@ -7,6 +8,9 @@ class MarkdownText(tk.Text):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.base_font = font.Font(family="TkDefaultFont", size=12)
+        self.config(font=self.base_font)
+
         self.configure(undo=True, maxundo=20)
         self.configure_tags()
         self.configure_bindings()
@@ -21,6 +25,15 @@ class MarkdownText(tk.Text):
         self.bind("<Control-Key-4>", lambda e: self.format_line("h4"))
         self.bind("<Control-Key-5>", lambda e: self.format_line("h5"))
 
+        self.bind("<Control-plus>", lambda e: self.zoom(1))
+        self.bind("<Control-minus>", lambda e: self.zoom(-1))
+        self.bind("<Control-0>", lambda e: self.base_font.configure(size=12))
+
+    def zoom(self, delta):
+        size = self.base_font.actual("size") + delta
+        if size >= 8:
+            self.base_font.configure(size=size)
+
     def schedule_highlight_markdown(self):
         if self._update_job:
             self.after_cancel(self._update_job)
@@ -29,22 +42,115 @@ class MarkdownText(tk.Text):
     def configure_tags(self):
         """Настройка стилей для Markdown-элементов"""
         # Информация о файле
-        self.tag_config("info", font=("Arial", 12, "bold italic"), foreground="#4B0082")
+        self.tag_config(
+            "info",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                weight="bold",
+                slant="italic",
+            ),
+            foreground="#4B0082",
+        )
         # Заголовки
-        self.tag_config("h1", font=("Arial", 18, "bold"), foreground="#2b6cb0")
-        self.tag_config("h2", font=("Arial", 16, "bold"), foreground="#2c5282")
-        self.tag_config("h3", font=("Arial", 14, "bold"), foreground="#3182ce")
-        self.tag_config("h4", font=("Arial", 12, "bold"), foreground="#3182ce")
-        self.tag_config("h5", font=("Arial", 11, "bold"), foreground="#3182ce")
+        self.tag_config(
+            "h1",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size") + 6,
+                weight="bold",
+            ),
+            foreground="#2b6cb0",
+        )
+        self.tag_config(
+            "h2",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size") + 4,
+                weight="bold",
+            ),
+            foreground="#2c5282",
+        )
+        self.tag_config(
+            "h3",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size") + 2,
+                weight="bold",
+            ),
+            foreground="#3182ce",
+        )
+        self.tag_config(
+            "h4",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                weight="bold",
+            ),
+            foreground="#3182ce",
+        )
+        self.tag_config(
+            "h5",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size") - 1,
+                weight="bold",
+            ),
+            foreground="#3182ce",
+        )
         # Форматирование текста
-        self.tag_config("bold", font=("Arial", 12, "bold"))
-        self.tag_config("italic", font=("Arial", 12, "italic"))
-        self.tag_config("bold_italic", font=("Arial", 12, "bold italic"))
+        self.tag_config(
+            "bold",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                weight="bold",
+            ),
+        )
+        self.tag_config(
+            "italic",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                slant="italic",
+            ),
+        )
+        self.tag_config(
+            "bold_italic",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                weight="bold",
+                slant="italic",
+            ),
+        )
         # Код и ссылки
-        self.tag_config("code", font=("Courier", 12), background="#f0f0f0")
-        self.tag_config("link", foreground="#4299e1", underline=True)
+        self.tag_config(
+            "code",
+            font=("Courier", self.base_font.actual("size")),
+            background="#f0f0f0",
+        )
+        self.tag_config(
+            "link",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                weight="normal",
+            ),
+            foreground="#4299e1",
+            underline=True,
+        )
         # Списки
-        self.tag_config("list", lmargin2=20, spacing1=5)
+        self.tag_config(
+            "list",
+            font=font.Font(
+                family=self.base_font.actual("family"),
+                size=self.base_font.actual("size"),
+                weight="normal",
+            ),
+            lmargin2=20,
+            spacing1=5,
+        )
 
     def highlight_markdown(self, event=None):
         """Подсветка Markdown-синтаксиса"""
