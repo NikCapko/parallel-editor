@@ -21,7 +21,7 @@ class BnfEditor:
         # Переменные для полей ввода
         title_var = tk.StringVar()
         author_var = tk.StringVar()
-        lang_var = tk.StringVar(value="ru")
+        lang_var = tk.StringVar(value="en-ru")
         tags_var = tk.StringVar()
 
         # Путь к файлу метаданных
@@ -40,7 +40,7 @@ class BnfEditor:
                     data = json.load(f)
                     title_var.set(data.get("title", ""))
                     author_var.set(data.get("author", ""))
-                    lang_var.set(data.get("lang", "ru"))
+                    lang_var.set(data.get("lang", "en-ru"))
                     tags_var.set(", ".join(data.get("tags", [])))
                     description_text = data.get("description", "")
             except (json.JSONDecodeError, FileNotFoundError):
