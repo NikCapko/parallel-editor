@@ -101,7 +101,7 @@ class MarkdownText(tk.Text):
             "info",
             font=font.Font(
                 family=self.base_font.actual("family"),
-                size=self.base_font.actual("size"),
+                size=self.base_font.actual("size") + 1,
                 weight="bold",
                 slant="italic",
             ),
