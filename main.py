@@ -16,6 +16,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from bnf_editor import BnfEditor
+from dialog_manager import DialogManager
 from line_numbers import LineNumbers
 from markdown_text import MarkdownText
 from text_corrector import TextCorrector
@@ -452,154 +454,9 @@ class SideBySideEditor:
 
     def open_metadata_dialog(self):
         if not self.orig_path:
-            show_dialog("Ошибка", "Сначала откройте файл.")
+            DialogManager.show_dialog("Ошибка", "Сначала откройте файл.")
             return
-
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Метаданные книги")
-        dialog.geometry("800x400")  # Увеличиваем высоту для многострочных полей
-        dialog.resizable(False, False)
-
-        main_frame = ttk.Frame(dialog, padding="10")
-        main_frame.pack(expand=True, fill=tk.BOTH)
-
-        # Переменные для полей ввода
-        title_var = tk.StringVar()
-        author_var = tk.StringVar()
-        lang_var = tk.StringVar(value="en-ru")
-        tags_var = tk.StringVar()
-
-        # Путь к файлу метаданных
-        base_dir = os.path.dirname(self.orig_path)
-        base_name = os.path.splitext(
-            os.path.splitext(os.path.basename(self.orig_path))[0]
-        )[0]
-        metadata_path = os.path.join(base_dir, f"{base_name}.bnf")
-
-        description_text = ""
-
-        # Загрузка существующих данных, если файл существует
-        if os.path.exists(metadata_path):
-            try:
-                with open(metadata_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    title_var.set(data.get("title", ""))
-                    author_var.set(data.get("author", ""))
-                    lang_var.set(data.get("lang", "en-ru"))
-                    tags_var.set(", ".join(data.get("tags", [])))
-                    description_text = data.get("description", "")
-            except (json.JSONDecodeError, FileNotFoundError):
-                pass
-        else:
-            # Парсинг из имени файла, если файл метаданных не найден
-            filename = os.path.basename(base_name)
-            match = re.match(r"^(.*?)(?:\[(.*?)\])?$", filename)
-            if match:
-                title_var.set(match.group(1).strip())
-                if match.group(2):
-                    author_var.set(match.group(2).strip())
-
-        # Заголовки и поля ввода
-        row = 0
-        ttk.Label(main_frame, text="Название:", font=("Arial", 10, "bold")).grid(
-            row=row, column=0, sticky="w", pady=5
-        )
-        title_entry = ttk.Entry(main_frame, textvariable=title_var, width=50)
-        title_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
-        row += 1
-
-        ttk.Label(main_frame, text="Автор:", font=("Arial", 10, "bold")).grid(
-            row=row, column=0, sticky="w", pady=5
-        )
-        author_entry = ttk.Entry(main_frame, textvariable=author_var, width=50)
-        author_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
-        row += 1
-
-        ttk.Label(main_frame, text="Язык:", font=("Arial", 10, "bold")).grid(
-            row=row, column=0, sticky="w", pady=5
-        )
-        lang_entry = ttk.Combobox(
-            main_frame,
-            textvariable=lang_var,
-            values=("ru", "en-ru"),
-            state="readonly",
-            width=50,
-        )
-        lang_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
-        row += 1
-
-        ttk.Label(
-            main_frame, text="Теги (через запятую):", font=("Arial", 10, "bold")
-        ).grid(row=row, column=0, sticky="w", pady=5)
-        tags_entry = ttk.Entry(main_frame, textvariable=tags_var, width=50)
-        tags_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
-        row += 1
-
-        # Поле для описания с переносом строк
-        ttk.Label(main_frame, text="Описание:", font=("Arial", 10, "bold")).grid(
-            row=row, column=0, sticky="nw", pady=5
-        )
-        desc_frame = ttk.Frame(main_frame)
-        desc_frame.grid(row=row, column=1, sticky="nsew", padx=5, pady=5)
-
-        desc_text = tk.Text(desc_frame, height=5, wrap=tk.WORD, undo=True)
-        desc_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        desc_scroll = ttk.Scrollbar(desc_frame, command=desc_text.yview)
-        desc_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        desc_text.configure(yscrollcommand=desc_scroll.set)
-
-        desc_text.insert("1.0", description_text)
-        row += 1
-
-        main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(4, weight=1)  # Делаем строку с описанием растягиваемой
-
-        # Кнопки
-        buttons_frame = ttk.Frame(dialog)
-        buttons_frame.pack(side=tk.BOTTOM, pady=10)
-
-        save_button = ttk.Button(
-            buttons_frame,
-            text="Сохранить",
-            command=lambda: self.save_metadata(
-                dialog,
-                metadata_path,
-                title_var,
-                author_var,
-                lang_var,
-                tags_var,
-                desc_text,
-            ),
-        )
-        save_button.pack(side=tk.LEFT, padx=5)
-
-        cancel_button = ttk.Button(buttons_frame, text="Отмена", command=dialog.destroy)
-        cancel_button.pack(side=tk.LEFT, padx=5)
-
-    def save_metadata(
-        self,
-        dialog,
-        metadata_path,
-        title_var,
-        author_var,
-        lang_var,
-        tags_var,
-        desc_text,
-    ):
-        data = {
-            "title": title_var.get(),
-            "author": author_var.get(),
-            "lang": lang_var.get(),
-            "tags": [tag.strip() for tag in tags_var.get().split(",") if tag.strip()],
-            "description": desc_text.get("1.0", "end-1c"),
-        }
-
-        with open(metadata_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-
-        dialog.destroy()
-        show_dialog("Сохранено", "Метаданные успешно сохранены.")
+        BnfEditor(self.orig_path)
 
     def on_ctrl_f(self, event):
         # определяем, в каком текстовом поле был фокус при нажатии
@@ -731,7 +588,7 @@ class SideBySideEditor:
                         widget.tag_remove("search_highlight_all", "1.0", tk.END)
                     self.search_matches.append([start_index, end_index])
             except re.error as e:
-                show_dialog("Ошибка RegEx", str(e))
+                DialogManager.show_dialog("Ошибка RegEx", str(e))
                 return
         else:
             start_pos = "1.0"
@@ -883,12 +740,14 @@ class SideBySideEditor:
             subprocess.Popen([app, en_path])
 
         except Exception as e:
-            show_dialog("Ошибка открытия", f"Не удалось открыть файл: {str(e)}")
+            DialogManager.show_dialog(
+                "Ошибка открытия", f"Не удалось открыть файл: {str(e)}"
+            )
 
     def reload_md_files(self):
         """Перезагружает содержимое оригинального и переведённого файла с диска"""
         if not self.orig_path or not self.trans_path:
-            show_dialog("Ошибка", "Файлы не загружены")
+            DialogManager.show_dialog("Ошибка", "Файлы не загружены")
             return
 
         try:
@@ -919,10 +778,10 @@ class SideBySideEditor:
             self.right_text.update_idletasks()  # опционально, но помогает
             self.root.after_idle(lambda: self.right_text.yview_moveto(right_scroll_pos))
 
-            show_dialog("Готово", "Файлы перезагружены с диска.")
+            DialogManager.show_dialog("Готово", "Файлы перезагружены с диска.")
 
         except Exception as e:
-            show_dialog("Ошибка загрузки", str(e))
+            DialogManager.show_dialog("Ошибка загрузки", str(e))
 
     def load_md_pair_dialog(self):
         file_path = filedialog.askopenfilename(
@@ -937,7 +796,9 @@ class SideBySideEditor:
         base_name, lang = os.path.splitext(base_name)
 
         if lang not in (".en", ".ru"):
-            show_dialog("Ошибка", "Файл должен заканчиваться на .en.md или .ru.md")
+            DialogManager.show_dialog(
+                "Ошибка", "Файл должен заканчиваться на .en.md или .ru.md"
+            )
             return
 
         other_lang = ".ru" if lang == ".en" else ".en"
@@ -986,7 +847,7 @@ class SideBySideEditor:
             self.update_file_title()
 
         except Exception as e:
-            show_dialog("Ошибка", str(e))
+            DialogManager.show_dialog("Ошибка", str(e))
 
         # 🔹 ЕСЛИ ФАЙЛА ПЕРЕВОДА НЕТ
         if not os.path.exists(trans_path):
@@ -1009,7 +870,7 @@ class SideBySideEditor:
     def edit_translate(self):
         """Открывает файл перевода .ru.md в mousepad"""
         if not self.orig_path:
-            show_dialog("Ошибка", "Файлы не загружены")
+            DialogManager.show_dialog("Ошибка", "Файлы не загружены")
             return
 
         try:
@@ -1020,14 +881,16 @@ class SideBySideEditor:
             elif self.trans_path.endswith(".ru.md"):
                 ru_path = self.trans_path
             else:
-                show_dialog("Ошибка", "Русский файл не найден")
+                DialogManager.show_dialog("Ошибка", "Русский файл не найден")
                 return
 
             # Запускаем Ghostwriter с этим файлом
             subprocess.Popen(["mousepad", ru_path])
 
         except Exception as e:
-            show_dialog("Ошибка предпросмотра", f"Не удалось открыть файл: {str(e)}")
+            DialogManager.show_dialog(
+                "Ошибка предпросмотра", f"Не удалось открыть файл: {str(e)}"
+            )
 
     def sync_cursor_left(self, event=None):
         if self.syncing:
@@ -1105,7 +968,7 @@ class SideBySideEditor:
 
     def export_parallel_book(self, book_type):
         if not self.orig_path or not self.trans_path:
-            show_dialog("Ошибка", "Файлы не загружены")
+            DialogManager.show_dialog("Ошибка", "Файлы не загружены")
             return
 
         original_lines = self.left_text.get("1.0", tk.END).strip().splitlines()
@@ -1151,7 +1014,7 @@ class SideBySideEditor:
             save_path = os.path.join(base_dir, f"{base_name}.epub")
             epub.write_epub(save_path, book)
             subprocess.Popen(["xdg-open", save_path])
-            show_dialog("Готово", f"EPUB сохранён: {save_path}")
+            DialogManager.show_dialog("Готово", f"EPUB сохранён: {save_path}")
 
         # ---- PDF ----
         elif book_type.startswith("pdf"):
@@ -1159,10 +1022,10 @@ class SideBySideEditor:
             font_path = "/usr/share/fonts/TTF/DejaVuSans.ttf"
             bold_font_path = "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf"
             if not os.path.exists(font_path):
-                show_dialog("Ошибка", f"Не найден шрифт {font_path}")
+                DialogManager.show_dialog("Ошибка", f"Не найден шрифт {font_path}")
                 return
             if not os.path.exists(bold_font_path):
-                show_dialog("Ошибка", f"Не найден шрифт {bold_font_path}")
+                DialogManager.show_dialog("Ошибка", f"Не найден шрифт {bold_font_path}")
                 return
             pdfmetrics.registerFont(TTFont("DejaVu", font_path))
             pdfmetrics.registerFont(TTFont("DejaVu-Bold", bold_font_path))
@@ -1236,7 +1099,7 @@ class SideBySideEditor:
 
             doc.build(elements)
             subprocess.Popen(["xdg-open", save_path])
-            show_dialog("Готово", f"PDF сохранён: {save_path}")
+            DialogManager.show_dialog("Готово", f"PDF сохранён: {save_path}")
 
     def save_md_files(self):
         try:
@@ -1286,10 +1149,10 @@ class SideBySideEditor:
             with open(self.trans_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(translated_text) + "\n")
 
-            show_dialog("Успех", "Файлы сохранены.")
+            DialogManager.show_dialog("Успех", "Файлы сохранены.")
 
         except Exception as e:
-            show_dialog("Ошибка сохранения", str(e))
+            DialogManager.show_dialog("Ошибка сохранения", str(e))
 
     def highlight_current_line_left(self, event=None):
         # даём курсору переместиться, затем подсвечиваем
@@ -1322,24 +1185,6 @@ class SideBySideEditor:
         line_start = f"{index.split('.')[0]}.0"
         line_end = f"{index.split('.')[0]}.end"
         text_widget.tag_add("current_line", line_start, line_end)
-
-
-def show_dialog(title, message, timeout=500):
-    dialog = tk.Toplevel()
-    dialog.geometry("300x100")
-    dialog.resizable(False, False)
-
-    label = tk.Label(dialog, text=title + "\n\n" + message)
-    label.pack(expand=True, padx=20, pady=20)
-
-    # Центрируем окно на экране
-    dialog.update_idletasks()
-    x = (dialog.winfo_screenwidth() - dialog.winfo_width()) // 2
-    y = (dialog.winfo_screenheight() - dialog.winfo_height()) // 2
-    dialog.geometry(f"+{x}+{y}")
-
-    # Закрыть окно через timeout миллисекунд
-    dialog.after(ms=timeout, func=dialog.destroy)
 
 
 def clear_temp_dir():
