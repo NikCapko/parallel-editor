@@ -18,6 +18,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from line_numbers import LineNumbers
 from markdown_text import MarkdownText
+from text_corrector import TextCorrector
 from toc_list import TOCList
 from tooltip import ToolTip
 
@@ -697,59 +698,13 @@ class SideBySideEditor:
         self.search_target_widget.tag_add("search_highlight", start_pos, end_pos)
 
     def correct_text(self):
-        self.correct_text_frame_content(self.left_text)
-        self.correct_text_frame_content(self.right_text)
+        self.left_text_corrector = TextCorrector(self.left_text)
+        self.left_text_corrector.correct_text()
         self.left_toc.schedule_update()
+
+        self.right_text_corrector = TextCorrector(self.right_text)
+        self.right_text_corrector.correct_text()
         self.right_toc.schedule_update()
-
-    def correct_text_frame_content(self, text_frame):
-        text = text_frame.get("1.0", tk.END).strip()
-        simple_repl, regex_repl = self.load_replacements(CONFIG_FILE)
-        text = self.normalize_text(text, simple_repl, regex_repl)
-        text_frame.delete("1.0", tk.END)
-        text_frame.insert(tk.END, text)
-        text_frame.highlight_markdown()
-
-    def load_replacements(self, config_path: str):
-        with open(config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        return config.get("simple", {}), config.get("regex", {})
-
-    def fix_line_start_spaces(self, content: str) -> str:
-        new_lines = []
-        for line in content.splitlines():
-            stripped = line.lstrip()
-            if line.startswith(("#", "%")) or stripped.startswith("*"):
-                # служебные строки и списки остаются как есть
-                new_lines.append(line)
-            else:
-                # убираем лишние пробелы и добавляем ровно один
-                if stripped:
-                    line = " " + stripped
-                else:
-                    line = stripped
-                new_lines.append(line)
-        return "\n".join(new_lines)
-
-    def normalize_text(self, content: str, simple_repl: dict, regex_repl: dict) -> str:
-        # Простые замены
-        for old, new in simple_repl.items():
-            content = content.replace(old, new)
-
-        # Замены через регулярки
-        for pattern, repl in regex_repl.items():
-            content = re.sub(pattern, repl, content, flags=re.MULTILINE)
-
-        # Убираем пробелы перед \n
-        content = re.sub(r" \n", "\n", content)
-        content = re.sub(r"\n #", "\n#", content)
-        content = re.sub(r"\n %", "\n%", content)
-        content = re.sub(r"\n\n%", "\n%", content)
-
-        # Гарантируем ровно один пробел в начале строки
-        content = self.fix_line_start_spaces(content)
-
-        return content.strip() + "\n"
 
     def index_to_text_pos(self, text, index):
         """Преобразует позицию символа (int) в формат 'строка.символ' для Text"""
