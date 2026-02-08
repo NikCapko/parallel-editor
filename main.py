@@ -563,8 +563,13 @@ class SideBySideEditor:
 
     def update_file_title(self):
         """Обновляет заголовок с названием файла"""
-        if self.orig_path and self.trans_path:
-            base_name = os.path.basename(self.orig_path).split(".")[0]
+        if self.orig_path:
+            filename, _ = os.path.splitext(os.path.basename(self.orig_path))
+            base_name = filename.replace(".en", "")
+            self.file_title.config(text=f"{base_name}")
+        elif self.trans_path:
+            filename, _ = os.path.splitext(os.path.basename(self.trans_path))
+            base_name = filename.replace(".ru", "")
             self.file_title.config(text=f"{base_name}")
         else:
             self.file_title.config(text="Файл не загружен")
@@ -884,8 +889,7 @@ class SideBySideEditor:
             # original_text += [""] * (max_len - len(original_text))
             # translated_text += [""] * (max_len - len(translated_text))
 
-            base_name = os.path.basename(self.orig_path).split(".")[0]
-            self.file_title.config(text=f"{base_name}")
+            self.update_file_title()
 
             # 🔹 СОХРАНЕНИЕ
             with open(self.orig_path, "w", encoding="utf-8") as f:
