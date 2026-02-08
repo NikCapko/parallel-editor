@@ -55,22 +55,22 @@ class TOCList(tk.Listbox):
                 self.insert(tk.END, f"{title}")
                 self.headers_indexes_map[self.size() - 1] = i
                 self.headers_map[self.size() - 1] = title
-            elif line.startswith("## "):
+            elif line.startswith("##"):
                 title = line[3:]
                 self.insert(tk.END, f"  {title}")
                 self.headers_indexes_map[self.size() - 1] = i
                 self.headers_map[self.size() - 1] = title
-            elif line.startswith("### "):
+            elif line.startswith("###"):
                 title = line[4:]
                 self.insert(tk.END, f"    {title}")
                 self.headers_indexes_map[self.size() - 1] = i
                 self.headers_map[self.size() - 1] = title
-            elif line.startswith("#### "):
+            elif line.startswith("####"):
                 title = line[5:]
                 self.insert(tk.END, f"      {title}")
                 self.headers_indexes_map[self.size() - 1] = i
                 self.headers_map[self.size() - 1] = title
-            elif line.startswith("##### "):
+            elif line.startswith("#####"):
                 title = line[6:]
                 self.insert(tk.END, f"        {title}")
                 self.headers_indexes_map[self.size() - 1] = i
