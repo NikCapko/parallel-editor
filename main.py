@@ -463,11 +463,11 @@ class SideBySideEditor:
 
     def correct_text(self):
         self.left_text_corrector = TextCorrector(self.left_text)
-        self.left_text_corrector.correct_text()
+        self.left_text_corrector.correct_text(self.orig_path)
         self.left_toc.schedule_update()
 
         self.right_text_corrector = TextCorrector(self.right_text)
-        self.right_text_corrector.correct_text()
+        self.right_text_corrector.correct_text(self.trans_path)
         self.right_toc.schedule_update()
 
     def on_text_scroll_left(self, *args):
