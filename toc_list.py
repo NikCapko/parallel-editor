@@ -15,12 +15,11 @@ class TOCList(tk.Listbox):
         self.bind("<<ListboxSelect>>", self.on_select)
 
         # Словарь для хранения соответствия "заголовок" -> "номер строки"
-        self.headers_indexes_map = {}
-        self.headers_map = {}
+        self.headers_data = {}
         self._update_job = None
 
     def check_contains_text(self, text):
-        return any(text in str(value) for value in self.headers_map.values())
+        return any(text in str(value) for value in self.headers_data.values())
 
     def set_text_widget(self, widget):
         self.text_widget = widget
@@ -40,8 +39,7 @@ class TOCList(tk.Listbox):
         scroll_pos = self.yview()[0]
 
         self.delete(0, tk.END)
-        self.headers_indexes_map.clear()
-        self.headers_map.clear()
+        self.headers_data.clear()
 
         if not self.text_widget:
             return
@@ -53,28 +51,28 @@ class TOCList(tk.Listbox):
             if line.startswith("# "):
                 title = line[2:]
                 self.insert(tk.END, f"{title}")
-                self.headers_indexes_map[self.size() - 1] = i
-                self.headers_map[self.size() - 1] = title
-            elif line.startswith("##"):
-                title = line[3:]
-                self.insert(tk.END, f"  {title}")
-                self.headers_indexes_map[self.size() - 1] = i
-                self.headers_map[self.size() - 1] = title
-            elif line.startswith("###"):
-                title = line[4:]
-                self.insert(tk.END, f"    {title}")
-                self.headers_indexes_map[self.size() - 1] = i
-                self.headers_map[self.size() - 1] = title
-            elif line.startswith("####"):
-                title = line[5:]
-                self.insert(tk.END, f"      {title}")
-                self.headers_indexes_map[self.size() - 1] = i
-                self.headers_map[self.size() - 1] = title
+                listbox_index = self.size() - 1
+                self.headers_data[listbox_index] = (i, title)
             elif line.startswith("#####"):
                 title = line[6:]
                 self.insert(tk.END, f"        {title}")
-                self.headers_indexes_map[self.size() - 1] = i
-                self.headers_map[self.size() - 1] = title
+                listbox_index = self.size() - 1
+                self.headers_data[listbox_index] = (i, title)
+            elif line.startswith("####"):
+                title = line[5:]
+                self.insert(tk.END, f"      {title}")
+                listbox_index = self.size() - 1
+                self.headers_data[listbox_index] = (i, title)
+            elif line.startswith("###"):
+                title = line[4:]
+                self.insert(tk.END, f"    {title}")
+                listbox_index = self.size() - 1
+                self.headers_data[listbox_index] = (i, title)
+            elif line.startswith("##"):
+                title = line[3:]
+                self.insert(tk.END, f"  {title}")
+                listbox_index = self.size() - 1
+                self.headers_data[listbox_index] = (i, title)
 
         # восстанавливаем выделение по индексу
         if selected_index is not None and selected_index < self.size():
@@ -97,7 +95,7 @@ class TOCList(tk.Listbox):
 
         # Получаем номер строки из сохранённой карты
         listbox_index = selection[0]
-        text_line_number = self.headers_indexes_map.get(listbox_index)
+        text_line_number, title = self.headers_data.get(listbox_index, (None, None))
 
         if text_line_number is not None:
             # Переходим к нужной строке
