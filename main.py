@@ -333,22 +333,22 @@ class SideBySideEditor:
         self.right_search_button.pack(side=tk.RIGHT)
 
         # Основная часть правого редактора
-        right_frame = tk.Frame(right_editor_frame)
-        right_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.right_frame = tk.Frame(right_editor_frame)
+        self.right_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        right_num_frame = tk.Frame(right_frame)
+        right_num_frame = tk.Frame(self.right_frame)
         right_num_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         self.right_line_numbers = LineNumbers(right_num_frame, width=40)
         self.right_line_numbers.pack(side=tk.TOP, fill=tk.Y, expand=True)
 
-        self.right_text = MarkdownText(right_frame, wrap="word")
+        self.right_text = MarkdownText(self.right_frame, wrap="word")
         self.right_line_numbers.attach(self.right_text)
-        self.right_scroll = tk.Scrollbar(right_frame, command=self.on_scroll_right)
+        self.right_scroll = tk.Scrollbar(self.right_frame, command=self.on_scroll_right)
 
-        self.right_toc = TOCList(right_frame, self.right_text)
+        self.right_toc = TOCList(self.right_frame, self.right_text)
         self.right_toc_scroll = tk.Scrollbar(
-            right_frame, orient=tk.VERTICAL, command=self.right_toc.yview
+            self.right_frame, orient=tk.VERTICAL, command=self.right_toc.yview
         )
         self.right_toc.configure(yscrollcommand=self.right_toc_scroll.set)
         self.right_toc_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -509,20 +509,38 @@ class SideBySideEditor:
     def toggle_left_toc(self):
         if self.left_toc.winfo_ismapped():
             self.left_toc.pack_forget()
+            self.left_toc_scroll.pack_forget()
             self.toggle_left_toc_button.config(text="📑")  # скрыт
         else:
             self.left_toc = TOCList(self.left_frame, None)
-            self.left_toc.pack(side=tk.LEFT, fill=tk.Y, before=self.left_line_numbers)
+            self.left_toc_scroll = tk.Scrollbar(
+                self.left_frame, orient=tk.VERTICAL, command=self.left_toc.yview
+            )
+            self.left_toc.configure(yscrollcommand=self.left_toc_scroll.set)
+            self.left_toc_scroll.pack(
+                side=tk.LEFT, fill=tk.Y, before=self.left_line_numbers
+            )
+            self.left_toc.pack(side=tk.LEFT, fill=tk.Y, before=self.left_toc_scroll)
+
             self.left_toc.text_widget = self.left_text
-            self.root.after_idle(self.left_toc.update_toc)
+            self.left_toc.update_toc()
             self.toggle_left_toc_button.config(text="👈")  # показан
 
     def toggle_right_toc(self):
         if self.right_toc.winfo_ismapped():
             self.right_toc.pack_forget()
+            self.right_toc_scroll.pack_forget()
             self.toggle_right_toc_button.config(text="📑")  # скрыт
         else:
-            self.right_toc.pack(side=tk.RIGHT, fill=tk.Y, before=self.right_scroll)
+            self.right_toc = TOCList(self.right_frame, None)
+            self.right_toc_scroll = tk.Scrollbar(
+                self.right_frame, orient=tk.VERTICAL, command=self.right_toc.yview
+            )
+            self.right_toc.configure(yscrollcommand=self.right_toc_scroll.set)
+            self.right_toc_scroll.pack(
+                side=tk.RIGHT, fill=tk.Y, after=self.right_scroll
+            )
+            self.right_toc.pack(side=tk.RIGHT, fill=tk.Y, before=self.right_toc_scroll)
             self.right_toc.update_toc()
             self.toggle_right_toc_button.config(text="👉")  # показан
 
