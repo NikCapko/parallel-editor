@@ -12,7 +12,7 @@ class BnfEditor:
         self.orig_path = orig_path
         dialog = tk.Toplevel()
         dialog.title("Метаданные книги")
-        dialog.geometry("800x400")  # Увеличиваем высоту для многострочных полей
+        dialog.geometry("800x360")
         dialog.resizable(False, False)
 
         main_frame = ttk.Frame(dialog, padding="10")
@@ -20,6 +20,7 @@ class BnfEditor:
 
         # Переменные для полей ввода
         title_var = tk.StringVar()
+        orig_name_var = tk.StringVar()
         author_var = tk.StringVar()
         lang_var = tk.StringVar(value="en-ru")
         tags_var = tk.StringVar()
@@ -39,6 +40,7 @@ class BnfEditor:
                 with open(metadata_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     title_var.set(data.get("title", ""))
+                    orig_name_var.set(data.get("orig_name", ""))
                     author_var.set(data.get("author", ""))
                     lang_var.set(data.get("lang", "en-ru"))
                     tags_var.set(", ".join(data.get("tags", [])))
@@ -56,11 +58,19 @@ class BnfEditor:
 
         # Заголовки и поля ввода
         row = 0
+
         ttk.Label(main_frame, text="Название:", font=("Arial", 10, "bold")).grid(
             row=row, column=0, sticky="w", pady=5
         )
         title_entry = ttk.Entry(main_frame, textvariable=title_var, width=50)
         title_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        row += 1
+
+        ttk.Label(
+            main_frame, text="Оригинальное название:", font=("Arial", 10, "bold")
+        ).grid(row=row, column=0, sticky="w", pady=5)
+        orig_name_entry = ttk.Entry(main_frame, textvariable=orig_name_var, width=50)
+        orig_name_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
         ttk.Label(main_frame, text="Автор:", font=("Arial", 10, "bold")).grid(
@@ -121,6 +131,7 @@ class BnfEditor:
                 dialog,
                 metadata_path,
                 title_var,
+                orig_name_var,
                 author_var,
                 lang_var,
                 tags_var,
@@ -132,11 +143,26 @@ class BnfEditor:
         cancel_button = ttk.Button(buttons_frame, text="Отмена", command=dialog.destroy)
         cancel_button.pack(side=tk.LEFT, padx=5)
 
+        dialog.bind(
+            "<Control-s>",
+            lambda event: self.save_metadata(
+                dialog,
+                metadata_path,
+                title_var,
+                orig_name_var,
+                author_var,
+                lang_var,
+                tags_var,
+                desc_text,
+            ),
+        )
+
     def save_metadata(
         self,
         dialog,
         metadata_path,
         title_var,
+        orig_name_var,
         author_var,
         lang_var,
         tags_var,
@@ -144,6 +170,7 @@ class BnfEditor:
     ):
         data = {
             "title": title_var.get(),
+            "orig_name": orig_name_var.get(),
             "author": author_var.get(),
             "lang": lang_var.get(),
             "tags": [tag.strip() for tag in tags_var.get().split(",") if tag.strip()],
