@@ -60,7 +60,7 @@ class TextCorrector:
         filename, _ = os.path.splitext(os.path.basename(file_path))
         base_name = re.sub(r" \[.*?\]", "", filename).strip().replace(".", "_")
         if content.startswith("#"):
-            match = re.match(r"^(.*?)(?:\[(.*?)\])(\.[a-z]{0,2})", filename)
+            match = re.match(r"^(.*?)(?:\[(.*?)\])?(\.[a-z]{2})?", filename)
             title = ""
             author = ""
             lang = None
