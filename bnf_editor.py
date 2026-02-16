@@ -173,7 +173,11 @@ class BnfEditor:
             "orig_name": orig_name_var.get(),
             "author": author_var.get(),
             "lang": lang_var.get(),
-            "tags": [tag.strip() for tag in tags_var.get().split(",") if tag.strip()],
+            "tags": [
+                tag.strip().lowercase()
+                for tag in tags_var.get().split(",")
+                if tag.strip()
+            ],
             "description": desc_text.get("1.0", "end-1c"),
         }
 
