@@ -732,6 +732,7 @@ class SideBySideEditor:
 
             # 🔹 СОЗДАЁМ ФАЙЛ
             try:
+                self.trans_path = trans_path
                 with open(trans_path, "w", encoding="utf-8") as f:
                     f.write("")  # можно добавить шаблон
             except Exception as e:
