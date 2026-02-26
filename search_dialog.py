@@ -19,7 +19,13 @@ class SearchDialog:
         search_win.attributes("-topmost", True)
 
         # Список вариантов
-        options = [".+\\n.+", "\\n\\n\\n", "(?<!\n\n)\n\*{3,}\n(?!\n\n)"]
+        options = [
+            r".+\\n.+",
+            r"\\n\\n\\n",
+            r"(?<!\n\n)\n\*{3,}\n(?!\n\n)",
+            r"(?i)\b[Яя]\b[^.!?\n]{0,20}?л(?:а|ась)\b",
+            r"(?i)\b[Яя]\b[^.!?\n]{0,20}?л(?:|ся)\b",
+        ]
 
         tk.Label(search_win, text="Найти:").pack(side=tk.LEFT, padx=5, pady=5)
         search_entry = ttk.Combobox(
