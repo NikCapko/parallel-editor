@@ -11,6 +11,7 @@ from book_exporter import BookExporter
 from dialog_manager import DialogManager
 from line_numbers import LineNumbers
 from markdown_text import MarkdownText
+from replace_dialog import ReplaceDialog
 from search_dialog import SearchDialog
 from text_corrector import TextCorrector
 from toc_list import TOCList
@@ -398,12 +399,12 @@ class SideBySideEditor:
 
         root.bind("<Control-s>", lambda event: self.save_md_files())
         root.bind("<Control-o>", lambda event: self.load_md_pair_dialog())
-        root.bind("<Control-r>", lambda event: self.reload_md_files())
 
         self.left_text.configure(yscrollcommand=self.on_text_scroll_left)
         self.right_text.configure(yscrollcommand=self.on_text_scroll_right)
 
         root.bind("<Control-f>", self.on_ctrl_f)
+        root.bind("<Control-r>", self.on_ctrl_r)
 
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
@@ -452,6 +453,11 @@ class SideBySideEditor:
         text_frame = self.root.focus_get()
         self.open_search_dialog(text_frame)
 
+    def on_ctrl_r(self, event):
+        # определяем, в каком текстовом поле был фокус при нажатии
+        text_frame = self.root.focus_get()
+        self.open_replace_dialog(text_frame)
+
     def on_left_search(self):
         self.open_search_dialog(self.left_text)
 
@@ -460,6 +466,9 @@ class SideBySideEditor:
 
     def open_search_dialog(self, text_frame):
         SearchDialog(self.root, text_frame)
+
+    def open_replace_dialog(self, text_frame):
+        ReplaceDialog(self.root, text_frame)
 
     def correct_text(self):
         self.left_text_corrector = TextCorrector(self.left_text)
