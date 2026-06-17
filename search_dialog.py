@@ -44,6 +44,12 @@ class SearchDialog:
         )
         select_all_check.pack(side=tk.LEFT, padx=5, pady=5)
 
+        match_case_var = tk.BooleanVar()
+        match_case_check = tk.Checkbutton(
+            search_win, text="Match Case", variable=match_case_var
+        )
+        match_case_check.pack(side=tk.LEFT, padx=5, pady=5)
+
         self.search_started = False
 
         def start_search():
@@ -52,7 +58,11 @@ class SearchDialog:
             if not term or not self.text_frame:
                 return
             self.find_all_matches(
-                self.text_frame, term, regex_var.get(), select_all_var.get()
+                self.text_frame,
+                term,
+                regex_var.get(),
+                select_all_var.get(),
+                match_case_var.get(),
             )
             self.goto_next_match()
 
@@ -106,7 +116,9 @@ class SearchDialog:
         col = index - text.rfind("\n", 0, index) - 1
         return f"{line}.{col}"
 
-    def find_all_matches(self, widget, term, use_regex=False, select_all=False):
+    def find_all_matches(
+        self, widget, term, use_regex=False, select_all=False, match_case=False
+    ):
         widget.tag_remove("current_line", "1.0", tk.END)
         self.search_matches.clear()
         self.search_index = -1
@@ -115,7 +127,8 @@ class SearchDialog:
 
         if use_regex:
             try:
-                for match in re.finditer(term, text_content, flags=re.IGNORECASE):
+                flags = 0 if match_case else re.IGNORECASE
+                for match in re.finditer(term, text_content, flags=flags):
                     start_index = self.index_to_text_pos(text_content, match.start())
                     end_index = self.index_to_text_pos(text_content, match.end())
                     if select_all:
@@ -130,7 +143,7 @@ class SearchDialog:
             start_pos = "1.0"
             while True:
                 start_pos = widget.search(
-                    term, start_pos, nocase=True, stopindex=tk.END
+                    term, start_pos, nocase=not (match_case), stopindex=tk.END
                 )
                 if not start_pos:
                     break
