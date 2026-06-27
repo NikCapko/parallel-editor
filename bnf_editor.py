@@ -86,7 +86,7 @@ class BnfEditor:
         lang_entry = ttk.Combobox(
             main_frame,
             textvariable=lang_var,
-            values=("ru", "en-ru"),
+            values=("en-ru",),
             state="readonly",
             width=50,
         )
