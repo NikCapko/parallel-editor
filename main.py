@@ -279,7 +279,17 @@ class SideBySideEditor:
             command=self.on_left_search,
             font=("Noto Color Emoji", 10),
         )
+        ToolTip(self.left_search_button, "Search")
         self.left_search_button.pack(side=tk.LEFT, anchor="w")
+
+        self.left_replace_button = tk.Button(
+            left_top_panel,
+            text="✏",
+            command=self.on_left_replace,
+            font=("Noto Color Emoji", 10),
+        )
+        ToolTip(self.left_replace_button, "Replace")
+        self.left_replace_button.pack(side=tk.LEFT, anchor="w")
 
         # Основная часть левого редактора
         self.left_frame = tk.Frame(left_editor_frame)
@@ -325,12 +335,23 @@ class SideBySideEditor:
             font=("Noto Color Emoji", 10),
         )
         self.toggle_right_toc_button.pack(side=tk.RIGHT, anchor="e", padx=2, pady=2)
+
+        self.right_replace_button = tk.Button(
+             right_top_panel,
+             text="✏",
+             command=self.on_right_replace,
+             font=("Noto Color Emoji", 10),
+         )
+        ToolTip(self.right_replace_button, "Replace")
+        self.right_replace_button.pack(side=tk.RIGHT)
+
         self.right_search_button = tk.Button(
             right_top_panel,
             text="🔎",
             command=self.on_right_search,
             font=("Noto Color Emoji", 10),
         )
+        ToolTip(self.right_search_button, "Search")
         self.right_search_button.pack(side=tk.RIGHT)
 
         # Основная часть правого редактора
@@ -461,8 +482,14 @@ class SideBySideEditor:
     def on_left_search(self):
         self.open_search_dialog(self.left_text)
 
+    def on_left_replace(self):
+        self.open_replace_dialog(self.left_text)
+
     def on_right_search(self):
         self.open_search_dialog(self.right_text)
+
+    def on_right_replace(self):
+        self.open_replace_dialog(self.right_text)
 
     def open_search_dialog(self, text_frame):
         SearchDialog(self.root, text_frame)
