@@ -948,6 +948,11 @@ class SideBySideEditor:
                 self.left_text, self.right_text, TextFieldType.LEFT
             ),
         )
+        # обновляем выделение текущего заголовка
+        index = self.left_text.index("insert")
+        line_num = index.split(".")[0]
+
+        self.left_toc.update_selection_by_text_line(int(line_num))
 
     def highlight_current_line_right(self, event=None):
         self.root.after(
@@ -956,6 +961,11 @@ class SideBySideEditor:
                 self.right_text, self.left_text, TextFieldType.RIGHT
             ),
         )
+        # обновляем выделение текущего заголовка
+        index = self.right_text.index("insert")
+        line_num = index.split(".")[0]
+
+        self.right_toc.update_selection_by_text_line(int(line_num))
 
     def _highlight_line_with_sync(self, src_text, dst_text, field_type):
         self._highlight_line(src_text)
