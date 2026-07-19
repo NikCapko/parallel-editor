@@ -603,12 +603,15 @@ class SideBySideEditor:
             filename, _ = os.path.splitext(os.path.basename(self.orig_path))
             base_name = filename.replace(".en", "")
             self.file_title.config(text=f"{base_name}")
+            self.root.title(base_name)
         elif self.trans_path:
             filename, _ = os.path.splitext(os.path.basename(self.trans_path))
             base_name = filename.replace(".ru", "")
             self.file_title.config(text=f"{base_name}")
+            self.root.title(base_name)
         else:
             self.file_title.config(text="Файл не загружен")
+            self.root.title("Paraline")
 
     def save_text_to_file(self, text_widget, path):
         content = text_widget.get("1.0", "end-1c")
