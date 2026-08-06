@@ -23,6 +23,7 @@ class MarkdownText(tk.Text):
     def configure_bindings(self):
         self.bind("<Control-b>", lambda e: self.format_line("bold"))
         self.bind("<Control-i>", lambda e: self.format_line("italic"))
+        self.bind("<Control-Shift-B>", lambda e: self.format_line("bold_italic"))
         self.bind("<Control-Key-1>", lambda e: self.format_line("h1"))
         self.bind("<Control-Key-2>", lambda e: self.format_line("h2"))
         self.bind("<Control-Key-3>", lambda e: self.format_line("h3"))
@@ -413,15 +414,21 @@ class MarkdownText(tk.Text):
         if style == "bold":
             # Если уже есть **, убираем
             if text.startswith("**") and text.endswith("**"):
-                text = text[2:-2]
+                text = text.strip("*")
             else:
-                text = f"**{text.strip().strip('*')}**"
+                text = f"**{text.strip().strip('*').strip()}**".strip()
 
         elif style == "italic":
             if text.startswith("*") and text.endswith("*"):
-                text = text[1:-1]
+                text = text.strip("*")
             else:
-                text = f"*{text.strip()}*"
+                text = f"*{text.strip().strip('*').strip()}*".strip()
+
+        elif style == "bold_italic":
+            if text.startswith("***") and text.endswith("***"):
+                text = text.strip("*")
+            else:
+                text = f"***{text.strip().strip('*').strip()}***".strip()
 
         elif style == "h1":
             if text.startswith("# "):

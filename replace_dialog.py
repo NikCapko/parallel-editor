@@ -19,8 +19,8 @@ class ReplaceDialog:
         replace_win.attributes("-topmost", True)
 
         options = [
-            r".+\\n.+",
-            r"\\n\\n\\n",
+            r".+\n.+",
+            r"\n\n\n",
             r"(?<!\n\n)\n\*{3,}\n(?!\n\n)",
         ]
 
@@ -44,12 +44,18 @@ class ReplaceDialog:
 
         case_sensitive_var = tk.BooleanVar()
         tk.Checkbutton(
-            replace_win, text="Сase sensitive", variable=case_sensitive_var
+            replace_win, text="Case sensitive", variable=case_sensitive_var
         ).grid(row=2, column=1, padx=5)
 
         select_all_var = tk.BooleanVar()
         tk.Checkbutton(replace_win, text="Select All", variable=select_all_var).grid(
             row=2, column=2, padx=5
+        )
+
+        # Чекбокс «С начала»
+        from_start_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(replace_win, text="С начала", variable=from_start_var).grid(
+            row=2, column=3, padx=5
         )
 
         self.search_started = False
@@ -66,46 +72,49 @@ class ReplaceDialog:
                 regex_var.get(),
                 select_all_var.get(),
                 case_sensitive_var.get(),
+                from_start_var.get(),
             )
             self.goto_next_match()
 
         def replace_current():
             if not self.search_matches:
                 return
-
             replace_text = replace_entry.get()
             start, end = self.search_matches[self.search_index]
-
             self.text_frame.delete(start, end)
             self.text_frame.insert(start, replace_text)
-
-            start_search()  # пересчитать совпадения
+            # После замены пересчитываем совпадения с учётом текущего режима «С начала»
+            start_search()
 
         def replace_all():
             term = search_entry.get()
             replace_text = replace_entry.get()
-
             if not term:
                 return
-
             content = self.text_frame.get("1.0", tk.END)
-
             try:
                 if regex_var.get():
-                    new_content = re.sub(
-                        term, replace_text, content, flags=re.IGNORECASE
-                    )
+                    flags = 0 if case_sensitive_var.get() else re.IGNORECASE
+                    new_content = re.sub(term, replace_text, content, flags=flags)
                 else:
-                    new_content = content.replace(term, replace_text)
+                    if case_sensitive_var.get():
+                        new_content = content.replace(term, replace_text)
+                    else:
+                        # простой case-insensitive replace
+                        pattern = re.compile(re.escape(term), re.IGNORECASE)
+                        new_content = pattern.sub(replace_text, content)
             except re.error as e:
                 DialogManager.show_dialog("Ошибка RegEx", str(e))
                 return
-
             self.text_frame.delete("1.0", tk.END)
             self.text_frame.insert("1.0", new_content)
-
             self.find_all_matches(
-                self.text_frame, term, regex_var.get(), select_all_var.get()
+                self.text_frame,
+                term,
+                regex_var.get(),
+                select_all_var.get(),
+                case_sensitive_var.get(),
+                from_start_var.get(),
             )
 
         def next_match():
@@ -124,7 +133,6 @@ class ReplaceDialog:
         tk.Button(replace_win, text="Replace All", command=replace_all).grid(
             row=3, column=1
         )
-
         tk.Button(replace_win, text="🔎", command=start_search).grid(row=3, column=2)
         tk.Button(replace_win, text="⬆️", command=prev_match).grid(row=3, column=3)
         tk.Button(replace_win, text="⬇️", command=next_match).grid(row=3, column=4)
@@ -135,7 +143,7 @@ class ReplaceDialog:
         replace_win.bind("<Escape>", lambda e: self.close(replace_win))
         search_entry.bind("<Return>", lambda e: start_search())
 
-    # --- Логика поиска (почти без изменений) ---
+    # --- Логика поиска ---
     def close(self, win):
         self.text_frame.tag_remove("search_highlight", "1.0", tk.END)
         self.text_frame.tag_remove("search_highlight_all", "1.0", tk.END)
@@ -167,7 +175,13 @@ class ReplaceDialog:
         return f"{line}.{col}"
 
     def find_all_matches(
-        self, widget, term, use_regex=False, select_all=False, case_sensitive_var=False
+        self,
+        widget,
+        term,
+        use_regex=False,
+        select_all=False,
+        case_sensitive=False,
+        from_start=False,
     ):
         widget.tag_remove("current_line", "1.0", tk.END)
         self.search_matches.clear()
@@ -177,7 +191,8 @@ class ReplaceDialog:
 
         if use_regex:
             try:
-                for match in re.finditer(term, text_content, flags=re.IGNORECASE):
+                flags = 0 if case_sensitive else re.IGNORECASE
+                for match in re.finditer(term, text_content, flags=flags):
                     start = self.index_to_text_pos(text_content, match.start())
                     end = self.index_to_text_pos(text_content, match.end())
                     if select_all:
@@ -190,7 +205,7 @@ class ReplaceDialog:
             start_pos = "1.0"
             while True:
                 start_pos = widget.search(
-                    term, start_pos, nocase=not (case_sensitive_var), stopindex=tk.END
+                    term, start_pos, nocase=not case_sensitive, stopindex=tk.END
                 )
                 if not start_pos:
                     break
@@ -199,6 +214,15 @@ class ReplaceDialog:
                     widget.tag_add("search_highlight_all", start_pos, end_pos)
                 self.search_matches.append([start_pos, end_pos])
                 start_pos = end_pos
+
+        # Начинаем с текущего места курсора (если не «С начала»)
+        if self.search_matches and not from_start:
+            current_pos = widget.index("insert")
+            for i, (start, end) in enumerate(self.search_matches):
+                if widget.compare(start, ">=", current_pos):
+                    self.search_index = i - 1  # следующий goto_next_match попадёт на i
+                    break
+            # если все совпадения до курсора → остаётся -1 → wrap на первое
 
         widget.tag_config("search_highlight_all", background="#7CFC00")
         widget.tag_config("search_highlight", background="green")

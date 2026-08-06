@@ -17,16 +17,12 @@ from text_corrector import TextCorrector
 from toc_list import TOCList
 from tooltip import ToolTip
 
-CONFIG_FILE = "replacements.json"
-
 TEMP_DIR = os.path.join(tempfile.gettempdir(), "paraline_editor")
 os.makedirs(TEMP_DIR, exist_ok=True)
-
 
 class TextFieldType:
     LEFT = 1
     RIGHT = 2
-
 
 class SideBySideEditor:
     def __init__(self, root):
@@ -58,7 +54,6 @@ class SideBySideEditor:
         ## Кнопки с иконками
 
         # load files
-
         self.load_button = tk.Button(
             self.buttons_frame,
             text="📂",
@@ -69,7 +64,6 @@ class SideBySideEditor:
         ToolTip(self.load_button, "Open File")
 
         # save files
-
         self.save_button = tk.Button(
             self.buttons_frame,
             text="💾",
@@ -80,7 +74,6 @@ class SideBySideEditor:
         ToolTip(self.save_button, "Save Files")
 
         # export files to book
-
         self.export_book_menu_button = tk.Menubutton(
             self.buttons_frame,
             text="📖",
@@ -109,7 +102,6 @@ class SideBySideEditor:
         self.export_book_menu_button.pack(side=tk.LEFT, padx=(0, 5))
 
         # translate en file
-
         self.translate_original_button = tk.Menubutton(
             self.buttons_frame,
             text="🌐",
@@ -137,7 +129,6 @@ class SideBySideEditor:
         self.translate_original_button.pack(side=tk.LEFT, padx=(0, 5))
 
         # reload files
-
         self.reload_button = tk.Button(
             self.buttons_frame,
             text="🔄",
@@ -195,6 +186,15 @@ class SideBySideEditor:
         )
         self.italic_button.pack(side=tk.LEFT, padx=2)
         ToolTip(self.italic_button, "italic format")
+
+        self.bold_italic_button = tk.Button(
+            self.format_frame,
+            text="***B***",
+            command=lambda: self.apply_format("bold_italic"),
+            font=("Arial", 8, "bold italic"),
+        )
+        self.bold_italic_button.pack(side=tk.LEFT, padx=2)
+        ToolTip(self.bold_italic_button, "bold italic format")
 
         self.h1_button = tk.Button(
             self.format_frame,

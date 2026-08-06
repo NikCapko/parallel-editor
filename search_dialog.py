@@ -29,6 +29,7 @@ class SearchDialog:
         ]
 
         tk.Label(search_win, text="Найти:").pack(side=tk.LEFT, padx=5, pady=5)
+
         search_entry = ttk.Combobox(
             search_win, values=options, width=30, state="normal"
         )
@@ -51,6 +52,13 @@ class SearchDialog:
         )
         match_case_check.pack(side=tk.LEFT, padx=5, pady=5)
 
+        # Новый чекбокс: поиск с начала документа
+        from_start_var = tk.BooleanVar(value=False)
+        from_start_check = tk.Checkbutton(
+            search_win, text="С начала", variable=from_start_var
+        )
+        from_start_check.pack(side=tk.LEFT, padx=5, pady=5)
+
         self.search_started = False
 
         def start_search():
@@ -64,6 +72,7 @@ class SearchDialog:
                 regex_var.get(),
                 select_all_var.get(),
                 match_case_var.get(),
+                from_start_var.get(),
             )
             self.goto_next_match()
 
@@ -118,7 +127,13 @@ class SearchDialog:
         return f"{line}.{col}"
 
     def find_all_matches(
-        self, widget, term, use_regex=False, select_all=False, match_case=False
+        self,
+        widget,
+        term,
+        use_regex=False,
+        select_all=False,
+        match_case=False,
+        from_start=False,
     ):
         widget.tag_remove("current_line", "1.0", tk.END)
         self.search_matches.clear()
@@ -144,7 +159,7 @@ class SearchDialog:
             start_pos = "1.0"
             while True:
                 start_pos = widget.search(
-                    term, start_pos, nocase=not (match_case), stopindex=tk.END
+                    term, start_pos, nocase=not match_case, stopindex=tk.END
                 )
                 if not start_pos:
                     break
@@ -155,6 +170,15 @@ class SearchDialog:
                     widget.tag_remove("search_highlight_all", "1.0", tk.END)
                 self.search_matches.append([start_pos, end_pos])
                 start_pos = end_pos
+
+        # Настройка начального индекса: по умолчанию — с текущей позиции курсора
+        if self.search_matches and not from_start:
+            current_pos = widget.index("insert")
+            for i, (start, end) in enumerate(self.search_matches):
+                if widget.compare(start, ">=", current_pos):
+                    self.search_index = i - 1  # следующий goto_next_match попадёт на i
+                    break
+            # если все совпадения до курсора — остаётся -1 → wrap на первое
 
         widget.tag_config(
             "search_highlight_all", background="#7CFC00", foreground="black"

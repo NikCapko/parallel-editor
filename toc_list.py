@@ -73,6 +73,11 @@ class TOCList(tk.Listbox):
                 self.insert(tk.END, f"  {title}")
                 listbox_index = self.size() - 1
                 self.headers_data[listbox_index] = (i, title)
+            elif line.startswith("**") and line.endswith("**") and not line.startswith("***"):
+                title = line
+                self.insert(tk.END, f"       {title}")
+                listbox_index = self.size() - 1
+                self.headers_data[listbox_index] = (i, title)
 
         # восстанавливаем выделение по индексу
         if selected_index is not None and selected_index < self.size():
