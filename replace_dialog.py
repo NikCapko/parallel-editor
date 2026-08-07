@@ -79,19 +79,46 @@ class ReplaceDialog:
         def replace_current():
             if not self.search_matches:
                 return
+
             replace_text = replace_entry.get()
             start, end = self.search_matches[self.search_index]
-            self.text_frame.delete(start, end)
-            self.text_frame.insert(start, replace_text)
-            # После замены пересчитываем совпадения с учётом текущего режима «С начала»
+
+            if regex_var.get():
+                # Get the actual matched text so we can expand backreferences
+                matched = self.text_frame.get(start, end)
+                try:
+                    flags = 0 if case_sensitive_var.get() else re.IGNORECASE
+                    # re.sub with count=1 expands \1, \2, \n, \g<name> etc. correctly
+                    expanded = re.sub(
+                        search_entry.get(),
+                        replace_text,
+                        matched,
+                        count=1,
+                        flags=flags
+                    )
+                except re.error as e:
+                    DialogManager.show_dialog("Ошибка RegEx", str(e))
+                    return
+                self.text_frame.delete(start, end)
+                self.text_frame.insert(start, expanded)
+            else:
+                # Ordinary (non-regex) replacement
+                self.text_frame.delete(start, end)
+                self.text_frame.insert(start, replace_text)
+
+            # After a successful replacement we must rebuild the match list
+            # (positions have shifted)
             start_search()
+
 
         def replace_all():
             term = search_entry.get()
             replace_text = replace_entry.get()
             if not term:
                 return
+
             content = self.text_frame.get("1.0", tk.END)
+
             try:
                 if regex_var.get():
                     flags = 0 if case_sensitive_var.get() else re.IGNORECASE
@@ -100,14 +127,16 @@ class ReplaceDialog:
                     if case_sensitive_var.get():
                         new_content = content.replace(term, replace_text)
                     else:
-                        # простой case-insensitive replace
                         pattern = re.compile(re.escape(term), re.IGNORECASE)
                         new_content = pattern.sub(replace_text, content)
             except re.error as e:
                 DialogManager.show_dialog("Ошибка RegEx", str(e))
                 return
+
             self.text_frame.delete("1.0", tk.END)
             self.text_frame.insert("1.0", new_content)
+
+            # Rebuild highlights after the bulk replace
             self.find_all_matches(
                 self.text_frame,
                 term,
