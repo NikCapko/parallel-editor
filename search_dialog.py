@@ -62,6 +62,8 @@ class SearchDialog:
         self.search_started = False
 
         def start_search():
+            self.text_frame.tag_remove("search_highlight", "1.0", tk.END)
+            self.text_frame.tag_remove("search_highlight_all", "1.0", tk.END)
             self.search_started = True
             term = search_entry.get()
             if not term or not self.text_frame:
