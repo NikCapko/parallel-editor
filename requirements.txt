@@ -1,0 +1,2 @@
+EbookLib==0.20
+reportlab==5.0.1
