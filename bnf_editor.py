@@ -3,21 +3,18 @@ import os
 import re
 import tkinter as tk
 from tkinter import ttk
-
 from dialog_manager import DialogManager
 
 
 class BnfEditor:
     def __init__(self, orig_path):
         self.orig_path = orig_path
-        self.history_path = os.path.join(
-            os.path.expanduser("~"), ".bnf_tag_history.json"
-        )
-        self.tag_history = sorted(self._load_tag_history())
+        self.history_path = os.path.join(os.path.expanduser("~"), ".bnf_tag_history.json")
+        self.tag_history = self._load_tag_history()
 
         dialog = tk.Toplevel()
         dialog.title("Метаданные книги")
-        dialog.geometry("800x420")
+        dialog.geometry("820x520")
         dialog.resizable(False, False)
 
         main_frame = ttk.Frame(dialog, padding="10")
@@ -28,8 +25,10 @@ class BnfEditor:
         orig_name_var = tk.StringVar()
         author_var = tk.StringVar()
         lang_var = tk.StringVar(value="en-ru")
-        tags_var = tk.StringVar()
-        add_tag_var = tk.StringVar()
+        tag_entry_var = tk.StringVar()
+
+        all_tags = sorted(self.tag_history[:])
+        current_tags = []
 
         # Путь к файлу метаданных
         base_dir = os.path.dirname(self.orig_path)
@@ -48,8 +47,12 @@ class BnfEditor:
                     orig_name_var.set(data.get("orig_name", ""))
                     author_var.set(data.get("author", ""))
                     lang_var.set(data.get("lang", "en-ru"))
-                    tags_var.set(", ".join(data.get("tags", [])))
+                    current_tags = [t.strip().lower() for t in data.get("tags", []) if t.strip()]
                     description_text = data.get("description", "")
+
+                    for t in current_tags:
+                        if t not in all_tags:
+                            all_tags.insert(0, t)
             except (json.JSONDecodeError, FileNotFoundError):
                 pass
         else:
@@ -66,75 +69,166 @@ class BnfEditor:
         ttk.Label(main_frame, text="Название:", font=("Arial", 10, "bold")).grid(
             row=row, column=0, sticky="w", pady=5
         )
-        title_entry = ttk.Entry(main_frame, textvariable=title_var, width=50)
-        title_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        ttk.Entry(main_frame, textvariable=title_var, width=52).grid(
+            row=row, column=1, sticky="ew", padx=5, pady=5
+        )
         row += 1
 
-        ttk.Label(
-            main_frame, text="Оригинальное название:", font=("Arial", 10, "bold")
-        ).grid(row=row, column=0, sticky="w", pady=5)
-        orig_name_entry = ttk.Entry(main_frame, textvariable=orig_name_var, width=50)
-        orig_name_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        ttk.Label(main_frame, text="Оригинальное название:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="w", pady=5
+        )
+        ttk.Entry(main_frame, textvariable=orig_name_var, width=52).grid(
+            row=row, column=1, sticky="ew", padx=5, pady=5
+        )
         row += 1
 
         ttk.Label(main_frame, text="Автор:", font=("Arial", 10, "bold")).grid(
             row=row, column=0, sticky="w", pady=5
         )
-        author_entry = ttk.Entry(main_frame, textvariable=author_var, width=50)
-        author_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        ttk.Entry(main_frame, textvariable=author_var, width=52).grid(
+            row=row, column=1, sticky="ew", padx=5, pady=5
+        )
         row += 1
 
         ttk.Label(main_frame, text="Язык:", font=("Arial", 10, "bold")).grid(
             row=row, column=0, sticky="w", pady=5
         )
-        lang_entry = ttk.Combobox(
+        ttk.Combobox(
             main_frame,
             textvariable=lang_var,
             values=("en-ru",),
             state="readonly",
             width=50,
+        ).grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        row += 1
+
+        # ===== Теги =====
+        ttk.Label(main_frame, text="Теги:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="nw", pady=(8, 4)
         )
-        lang_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
-        row += 1
 
-        # Теги
-        ttk.Label(
-            main_frame, text="Теги (через запятую):", font=("Arial", 10, "bold")
-        ).grid(row=row, column=0, sticky="w", pady=5)
-        tags_entry = ttk.Entry(main_frame, textvariable=tags_var, width=50)
-        tags_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
-        row += 1
+        tags_container = ttk.Frame(main_frame)
+        tags_container.grid(row=row, column=1, sticky="ew", padx=5, pady=(8, 4))
 
-        # Быстрый выбор из истории
-        ttk.Label(
-            main_frame, text="Добавить из истории:", font=("Arial", 10, "bold")
-        ).grid(row=row, column=0, sticky="w", pady=5)
-        add_tag_combo = ttk.Combobox(
-            main_frame,
-            textvariable=add_tag_var,
-            values=self.tag_history,
-            width=50,
+        # Поле ввода нового тега
+        tag_entry = ttk.Entry(tags_container, textvariable=tag_entry_var, width=52)
+        tag_entry.pack(fill=tk.X, pady=(0, 8))
+
+        # Контейнер для чипсов с переносом строк
+        chips_wrapper = ttk.Frame(tags_container)
+        chips_wrapper.pack(fill=tk.BOTH, expand=True)
+
+        # Text-виджет позволяет чипсам переноситься на новую строку
+        tags_display = tk.Text(
+            chips_wrapper,
+            height=8, # примерно 8 строк чипсов
+            wrap="word",
+            relief="flat",
+            borderwidth=0,
+            highlightthickness=0,
+            padx=0,
+            pady=2,
+            cursor="arrow",
             state="normal",
         )
-        add_tag_combo.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        tags_display.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        def on_tag_selected(event=None):
-            selected = add_tag_var.get().strip().lower()
-            if not selected:
-                return
+        # Вертикальный скролл, если чипсов очень много
+        chips_scroll = ttk.Scrollbar(
+            chips_wrapper, orient="vertical", command=tags_display.yview
+        )
+        chips_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        tags_display.configure(yscrollcommand=chips_scroll.set)
 
-            current = [
-                t.strip().lower() for t in tags_var.get().split(",") if t.strip()
-            ]
-            if selected not in current:
-                current.append(selected)
-                tags_var.set(", ".join(current))
+        def refresh_tags_display():
+            tags_display.configure(state="normal")
+            tags_display.delete("1.0", tk.END)
 
-            add_tag_var.set("")  # очищаем поле быстрого выбора
-            add_tag_combo.set("")
+            for tag in all_tags:
+                is_active = tag in current_tags
 
-        add_tag_combo.bind("<<ComboboxSelected>>", on_tag_selected)
-        add_tag_combo.bind("<Return>", on_tag_selected)
+                if is_active:
+                    bg = "#2980b9"
+                    fg = "white"
+                else:
+                    bg = "#ecf0f1"
+                    fg = "#2c3e50"
+
+                chip = tk.Frame(
+                    tags_display,
+                    bg=bg,
+                    cursor="hand2",
+                    highlightbackground="#bdc3c7",
+                    highlightthickness=1,
+                )
+
+                lbl = tk.Label(
+                    chip,
+                    text=tag,
+                    bg=bg,
+                    fg=fg,
+                    padx=9,
+                    pady=3,
+                    font=("Arial", 9),
+                    cursor="hand2",
+                )
+                lbl.pack()
+
+                def make_toggle(t):
+                    def toggle(event=None):
+                        if t in current_tags:
+                            current_tags.remove(t)
+                        else:
+                            current_tags.append(t)
+                        refresh_tags_display()
+                    return toggle
+
+                toggle_fn = make_toggle(tag)
+                chip.bind("<Button-1>", toggle_fn)
+                lbl.bind("<Button-1>", toggle_fn)
+
+                # Подсветка при наведении
+                def on_enter(e, c=chip, active=is_active):
+                    new_bg = "#3498db" if active else "#d5dbdb"
+                    c.configure(bg=new_bg)
+                    for child in c.winfo_children():
+                        child.configure(bg=new_bg)
+
+                def on_leave(e, c=chip, b=bg):
+                    c.configure(bg=b)
+                    for child in c.winfo_children():
+                        child.configure(bg=b)
+
+                chip.bind("<Enter>", on_enter)
+                chip.bind("<Leave>", on_leave)
+                lbl.bind("<Enter>", on_enter)
+                lbl.bind("<Leave>", on_leave)
+
+                # Вставляем чип + маленький пробел
+                tags_display.window_create(tk.END, window=chip)
+                tags_display.insert(tk.END, " ")
+
+            tags_display.configure(state="disabled")
+
+        def on_return(event):
+            tag = tag_entry_var.get().strip().lower()
+            if not tag:
+                return "break"
+
+            if tag not in all_tags:
+                all_tags.insert(0, tag)
+
+            if tag not in current_tags:
+                current_tags.append(tag)
+
+            tag_entry_var.set("")
+            refresh_tags_display()
+            return "break"
+
+        tag_entry.bind("<Return>", on_return)
+
+        # Первоначальная отрисовка
+        refresh_tags_display()
         row += 1
 
         # Описание
@@ -158,38 +252,28 @@ class BnfEditor:
         buttons_frame = ttk.Frame(dialog)
         buttons_frame.pack(side=tk.BOTTOM, pady=10)
 
-        save_button = ttk.Button(
-            buttons_frame,
-            text="Сохранить",
-            command=lambda: self.save_metadata(
+        def do_save():
+            self.save_metadata(
                 dialog,
                 metadata_path,
                 title_var,
                 orig_name_var,
                 author_var,
                 lang_var,
-                tags_var,
+                current_tags,
+                all_tags,
                 desc_text,
-            ),
-        )
+            )
+
+        save_button = ttk.Button(buttons_frame, text="Сохранить", command=do_save)
         save_button.pack(side=tk.LEFT, padx=5)
 
         cancel_button = ttk.Button(buttons_frame, text="Отмена", command=dialog.destroy)
         cancel_button.pack(side=tk.LEFT, padx=5)
 
-        dialog.bind(
-            "<Control-s>",
-            lambda event: self.save_metadata(
-                dialog,
-                metadata_path,
-                title_var,
-                orig_name_var,
-                author_var,
-                lang_var,
-                tags_var,
-                desc_text,
-            ),
-        )
+        dialog.bind("<Control-s>", lambda e: do_save())
+
+        tag_entry.focus_set()
 
     def _load_tag_history(self):
         if not os.path.exists(self.history_path):
@@ -203,12 +287,8 @@ class BnfEditor:
             pass
         return []
 
-    def _save_tag_history(self, used_tags):
-        # used_tags уже в нижнем регистре
-        history = self.tag_history[:]
-
-        history = sorted(history)
-
+    def _save_tag_history(self, all_tags):
+        history = sorted(all_tags[:])
         try:
             with open(self.history_path, "w", encoding="utf-8") as f:
                 json.dump(history, f, ensure_ascii=False, indent=2)
@@ -217,32 +297,30 @@ class BnfEditor:
             pass
 
     def save_metadata(
-        self,
-        dialog,
-        metadata_path,
-        title_var,
-        orig_name_var,
-        author_var,
-        lang_var,
-        tags_var,
-        desc_text,
+            self,
+            dialog,
+            metadata_path,
+            title_var,
+            orig_name_var,
+            author_var,
+            lang_var,
+            current_tags,
+            all_tags,
+            desc_text,
     ):
-        tags = [tag.strip().lower() for tag in tags_var.get().split(",") if tag.strip()]
-
         data = {
             "title": title_var.get(),
             "orig_name": orig_name_var.get(),
             "author": author_var.get(),
             "lang": lang_var.get(),
-            "tags": tags,
+            "tags": current_tags,
             "description": desc_text.get("1.0", "end-1c"),
         }
 
         with open(metadata_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        # Обновляем историю тегов
-        self._save_tag_history(tags)
+        self._save_tag_history(all_tags)
 
         dialog.destroy()
         DialogManager.show_dialog("Сохранено", "Метаданные успешно сохранены.")
