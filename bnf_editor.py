@@ -10,20 +10,26 @@ from dialog_manager import DialogManager
 class BnfEditor:
     def __init__(self, orig_path):
         self.orig_path = orig_path
+        self.history_path = os.path.join(
+            os.path.expanduser("~"), ".bnf_tag_history.json"
+        )
+        self.tag_history = sorted(self._load_tag_history())
+
         dialog = tk.Toplevel()
         dialog.title("Метаданные книги")
-        dialog.geometry("800x360")
+        dialog.geometry("800x420")
         dialog.resizable(False, False)
 
         main_frame = ttk.Frame(dialog, padding="10")
         main_frame.pack(expand=True, fill=tk.BOTH)
 
-        # Переменные для полей ввода
+        # Переменные
         title_var = tk.StringVar()
         orig_name_var = tk.StringVar()
         author_var = tk.StringVar()
         lang_var = tk.StringVar(value="en-ru")
         tags_var = tk.StringVar()
+        add_tag_var = tk.StringVar()
 
         # Путь к файлу метаданных
         base_dir = os.path.dirname(self.orig_path)
@@ -31,10 +37,9 @@ class BnfEditor:
             os.path.splitext(os.path.basename(self.orig_path))[0]
         )[0]
         metadata_path = os.path.join(base_dir, f"{base_name}.bnf")
-
         description_text = ""
 
-        # Загрузка существующих данных, если файл существует
+        # Загрузка существующих данных
         if os.path.exists(metadata_path):
             try:
                 with open(metadata_path, "r", encoding="utf-8") as f:
@@ -48,7 +53,6 @@ class BnfEditor:
             except (json.JSONDecodeError, FileNotFoundError):
                 pass
         else:
-            # Парсинг из имени файла, если файл метаданных не найден
             filename = os.path.basename(base_name)
             match = re.match(r"^(.*?)(?:\[(.*?)\])?$", filename)
             if match:
@@ -56,7 +60,7 @@ class BnfEditor:
                 if match.group(2):
                     author_var.set(match.group(2).strip())
 
-        # Заголовки и поля ввода
+        # ---- UI ----
         row = 0
 
         ttk.Label(main_frame, text="Название:", font=("Arial", 10, "bold")).grid(
@@ -93,6 +97,7 @@ class BnfEditor:
         lang_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
+        # Теги
         ttk.Label(
             main_frame, text="Теги (через запятую):", font=("Arial", 10, "bold")
         ).grid(row=row, column=0, sticky="w", pady=5)
@@ -100,7 +105,39 @@ class BnfEditor:
         tags_entry.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
-        # Поле для описания с переносом строк
+        # Быстрый выбор из истории
+        ttk.Label(
+            main_frame, text="Добавить из истории:", font=("Arial", 10, "bold")
+        ).grid(row=row, column=0, sticky="w", pady=5)
+        add_tag_combo = ttk.Combobox(
+            main_frame,
+            textvariable=add_tag_var,
+            values=self.tag_history,
+            width=50,
+            state="normal",
+        )
+        add_tag_combo.grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+
+        def on_tag_selected(event=None):
+            selected = add_tag_var.get().strip().lower()
+            if not selected:
+                return
+
+            current = [
+                t.strip().lower() for t in tags_var.get().split(",") if t.strip()
+            ]
+            if selected not in current:
+                current.append(selected)
+                tags_var.set(", ".join(current))
+
+            add_tag_var.set("")  # очищаем поле быстрого выбора
+            add_tag_combo.set("")
+
+        add_tag_combo.bind("<<ComboboxSelected>>", on_tag_selected)
+        add_tag_combo.bind("<Return>", on_tag_selected)
+        row += 1
+
+        # Описание
         ttk.Label(main_frame, text="Описание:", font=("Arial", 10, "bold")).grid(
             row=row, column=0, sticky="nw", pady=5
         )
@@ -109,16 +146,13 @@ class BnfEditor:
 
         desc_text = tk.Text(desc_frame, height=5, wrap=tk.WORD, undo=True)
         desc_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
         desc_scroll = ttk.Scrollbar(desc_frame, command=desc_text.yview)
         desc_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         desc_text.configure(yscrollcommand=desc_scroll.set)
-
         desc_text.insert("1.0", description_text)
-        row += 1
 
         main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(4, weight=1)  # Делаем строку с описанием растягиваемой
+        main_frame.rowconfigure(row, weight=1)
 
         # Кнопки
         buttons_frame = ttk.Frame(dialog)
@@ -157,6 +191,31 @@ class BnfEditor:
             ),
         )
 
+    def _load_tag_history(self):
+        if not os.path.exists(self.history_path):
+            return []
+        try:
+            with open(self.history_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return [str(t).strip().lower() for t in data if str(t).strip()]
+        except (json.JSONDecodeError, OSError):
+            pass
+        return []
+
+    def _save_tag_history(self, used_tags):
+        # used_tags уже в нижнем регистре
+        history = self.tag_history[:]
+
+        history = sorted(history)
+
+        try:
+            with open(self.history_path, "w", encoding="utf-8") as f:
+                json.dump(history, f, ensure_ascii=False, indent=2)
+            self.tag_history = history
+        except OSError:
+            pass
+
     def save_metadata(
         self,
         dialog,
@@ -168,19 +227,22 @@ class BnfEditor:
         tags_var,
         desc_text,
     ):
+        tags = [tag.strip().lower() for tag in tags_var.get().split(",") if tag.strip()]
+
         data = {
             "title": title_var.get(),
             "orig_name": orig_name_var.get(),
             "author": author_var.get(),
             "lang": lang_var.get(),
-            "tags": [
-                tag.strip().lower() for tag in tags_var.get().split(",") if tag.strip()
-            ],
+            "tags": tags,
             "description": desc_text.get("1.0", "end-1c"),
         }
 
         with open(metadata_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+
+        # Обновляем историю тегов
+        self._save_tag_history(tags)
 
         dialog.destroy()
         DialogManager.show_dialog("Сохранено", "Метаданные успешно сохранены.")
