@@ -3,13 +3,16 @@ import os
 import re
 import tkinter as tk
 from tkinter import ttk
+
 from dialog_manager import DialogManager
 
 
 class BnfEditor:
     def __init__(self, orig_path):
         self.orig_path = orig_path
-        self.history_path = os.path.join(os.path.expanduser("~"), ".bnf_tag_history.json")
+        self.history_path = os.path.join(
+            os.path.expanduser("~"), ".bnf_tag_history.json"
+        )
         self.tag_history = self._load_tag_history()
 
         dialog = tk.Toplevel()
@@ -26,6 +29,7 @@ class BnfEditor:
         author_var = tk.StringVar()
         lang_var = tk.StringVar(value="en-ru")
         tag_entry_var = tk.StringVar()
+        favorite_var = tk.BooleanVar()
 
         all_tags = sorted(self.tag_history[:])
         current_tags = []
@@ -47,7 +51,10 @@ class BnfEditor:
                     orig_name_var.set(data.get("orig_name", ""))
                     author_var.set(data.get("author", ""))
                     lang_var.set(data.get("lang", "en-ru"))
-                    current_tags = [t.strip().lower() for t in data.get("tags", []) if t.strip()]
+                    favorite_var.set(data.get("favorite", False))
+                    current_tags = [
+                        t.strip().lower() for t in data.get("tags", []) if t.strip()
+                    ]
                     description_text = data.get("description", "")
 
                     for t in current_tags:
@@ -74,9 +81,9 @@ class BnfEditor:
         )
         row += 1
 
-        ttk.Label(main_frame, text="Оригинальное название:", font=("Arial", 10, "bold")).grid(
-            row=row, column=0, sticky="w", pady=5
-        )
+        ttk.Label(
+            main_frame, text="Оригинальное название:", font=("Arial", 10, "bold")
+        ).grid(row=row, column=0, sticky="w", pady=5)
         ttk.Entry(main_frame, textvariable=orig_name_var, width=52).grid(
             row=row, column=1, sticky="ew", padx=5, pady=5
         )
@@ -102,6 +109,17 @@ class BnfEditor:
         ).grid(row=row, column=1, sticky="ew", padx=5, pady=5)
         row += 1
 
+        ttk.Label(main_frame, text="Избранное:", font=("Arial", 10, "bold")).grid(
+            row=row, column=0, sticky="w", pady=5
+        )
+        ttk.Checkbutton(
+            main_frame,
+            variable=favorite_var,
+            onvalue=True,
+            offvalue=False,
+        ).grid(row=row, column=1, sticky="ew", padx=5, pady=(8, 4))
+        row += 1
+
         # ===== Теги =====
         ttk.Label(main_frame, text="Теги:", font=("Arial", 10, "bold")).grid(
             row=row, column=0, sticky="nw", pady=(8, 4)
@@ -121,7 +139,7 @@ class BnfEditor:
         # Text-виджет позволяет чипсам переноситься на новую строку
         tags_display = tk.Text(
             chips_wrapper,
-            height=12, # примерно 12 строк чипсов
+            height=12,  # примерно 12 строк чипсов
             wrap="word",
             relief="flat",
             borderwidth=0,
@@ -181,6 +199,7 @@ class BnfEditor:
                         else:
                             current_tags.append(t)
                         refresh_tags_display()
+
                     return toggle
 
                 toggle_fn = make_toggle(tag)
@@ -260,6 +279,7 @@ class BnfEditor:
                 orig_name_var,
                 author_var,
                 lang_var,
+                favorite_var,
                 current_tags,
                 all_tags,
                 desc_text,
@@ -297,22 +317,24 @@ class BnfEditor:
             pass
 
     def save_metadata(
-            self,
-            dialog,
-            metadata_path,
-            title_var,
-            orig_name_var,
-            author_var,
-            lang_var,
-            current_tags,
-            all_tags,
-            desc_text,
+        self,
+        dialog,
+        metadata_path,
+        title_var,
+        orig_name_var,
+        author_var,
+        lang_var,
+        favorite_var,
+        current_tags,
+        all_tags,
+        desc_text,
     ):
         data = {
             "title": title_var.get(),
             "orig_name": orig_name_var.get(),
             "author": author_var.get(),
             "lang": lang_var.get(),
+            "favorite": favorite_var.get(),
             "tags": current_tags,
             "description": desc_text.get("1.0", "end-1c"),
         }
