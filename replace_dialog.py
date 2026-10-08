@@ -156,15 +156,18 @@ class ReplaceDialog:
             self.goto_prev_match()
 
         # --- Кнопки ---
+
+        tk.Button(replace_win, text="🔎", command=start_search).grid(row=3, column=0)
+        tk.Button(replace_win, text="⬆️", command=prev_match).grid(row=3, column=1)
+        tk.Button(replace_win, text="⬇️", command=next_match).grid(row=3, column=2)
+
         tk.Button(replace_win, text="Заменить", command=replace_current).grid(
-            row=3, column=0
+            row=3, column=3
         )
         tk.Button(replace_win, text="Заменить все", command=replace_all).grid(
-            row=3, column=1
+            row=3, column=4
         )
-        tk.Button(replace_win, text="🔎", command=start_search).grid(row=3, column=2)
-        tk.Button(replace_win, text="⬆️", command=prev_match).grid(row=3, column=3)
-        tk.Button(replace_win, text="⬇️", command=next_match).grid(row=3, column=4)
+
         tk.Button(replace_win, text="❌", command=lambda: self.close(replace_win)).grid(
             row=3, column=5
         )
