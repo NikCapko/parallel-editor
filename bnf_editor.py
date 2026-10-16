@@ -17,7 +17,7 @@ class BnfEditor:
 
         dialog = tk.Toplevel()
         dialog.title("Метаданные книги")
-        dialog.geometry("1100x700")
+        dialog.geometry("1100x750")
         dialog.resizable(False, False)
 
         main_frame = ttk.Frame(dialog, padding="10")
@@ -82,7 +82,7 @@ class BnfEditor:
         row += 1
 
         ttk.Label(
-            main_frame, text="Оригинальное название:", font=("Arial", 10, "bold")
+            main_frame, text="Оригинальное\nназвание:", font=("Arial", 10, "bold")
         ).grid(row=row, column=0, sticky="w", pady=5)
         ttk.Entry(main_frame, textvariable=orig_name_var, width=52).grid(
             row=row, column=1, sticky="ew", padx=5, pady=5
@@ -139,13 +139,14 @@ class BnfEditor:
         # Text-виджет позволяет чипсам переноситься на новую строку
         tags_display = tk.Text(
             chips_wrapper,
-            height=14,  # примерно 14 строк чипсов
+            height=16,  # примерно 16 строк чипсов
             wrap="word",
             relief="flat",
             borderwidth=0,
             highlightthickness=0,
-            padx=0,
+            padx=5,
             pady=2,
+            spacing2=2,
             cursor="arrow",
             state="normal",
         )
@@ -185,7 +186,7 @@ class BnfEditor:
                     text=tag,
                     bg=bg,
                     fg=fg,
-                    padx=9,
+                    padx=5,
                     pady=3,
                     font=("Arial", 9),
                     cursor="hand2",
